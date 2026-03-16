@@ -65,7 +65,6 @@ export class ChatSession {
   }
 
   async generateTitle(): Promise<string> {
-    console.log("here!");
     const ollama = createOllama({ baseURL: this.settings.baseURL });
     const summary = this.messages
       .slice(0, 6)
@@ -86,7 +85,6 @@ export class ChatSession {
     for await (const chunk of result.textStream) {
       title += chunk;
     }
-    console.log({ title });
     return (
       title
         .trim()
@@ -96,11 +94,7 @@ export class ChatSession {
   }
 
   serialize(): string {
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-    const lines: string[] = [`# AI Chat — ${timestamp}`, ""];
+    const lines: string[] = [];
 
     for (const msg of this.messages) {
       const label = msg.role === "user" ? "**User:**" : "**Assistant:**";

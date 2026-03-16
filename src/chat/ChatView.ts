@@ -184,7 +184,8 @@ export class ChatView extends ItemView {
 
     let title: string;
     try {
-      title = await this.session.generateTitle();
+      const gen_title = await this.session.generateTitle();
+      title = gen_title.charAt(0).toUpperCase() + gen_title.slice(1).toLowerCase();
     } catch {
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, "0");
