@@ -1,0 +1,235 @@
+/* ============================================================
+   Obsidian Ollama Chat — styles.css
+   All selectors prefixed with .oac- to avoid collisions.
+   Only Obsidian CSS variables are used for theming.
+   ============================================================ */
+
+/* Root container */
+.oac-chat-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-text-size);
+}
+
+/* ---- Toolbar ---- */
+.oac-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  background: var(--background-secondary);
+}
+
+.oac-title {
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oac-save-btn,
+.oac-clear-btn {
+  padding: 3px 8px;
+  font-size: 0.8em;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.oac-save-btn:hover,
+.oac-clear-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* ---- Message list ---- */
+.oac-message-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 10px;
+  scroll-behavior: smooth;
+}
+
+/* ---- Individual message ---- */
+.oac-message {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  position: relative;
+}
+
+.oac-message--user {
+  align-self: flex-end;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-bottom-right-radius: 2px;
+}
+
+.oac-message--assistant {
+  align-self: flex-start;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border-bottom-left-radius: 2px;
+}
+
+/* Streaming pre node */
+.oac-message-pre {
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Rendered markdown inside assistant bubble */
+.oac-message-rendered {
+  overflow: hidden;
+}
+
+.oac-message-rendered p:first-child {
+  margin-top: 0;
+}
+
+.oac-message-rendered p:last-child {
+  margin-bottom: 0;
+}
+
+.oac-message-rendered pre {
+  background: var(--background-primary);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.oac-message-rendered code {
+  background: var(--background-primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+/* ---- Selection popup ---- */
+.oac-selection-popup {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  gap: 4px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  padding: 3px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.oac-selection-btn {
+  padding: 2px 8px;
+  font-size: 0.78em;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.oac-selection-btn:hover {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+/* ---- Input area ---- */
+.oac-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  background: var(--background-secondary);
+}
+
+.oac-input {
+  width: 100%;
+  resize: none;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: var(--font-text-size);
+  font-family: inherit;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  line-height: 1.4;
+  max-height: calc(1.4em * 6 + 12px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.oac-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.oac-input::placeholder {
+  color: var(--text-muted);
+}
+
+.oac-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.oac-send-btn {
+  padding: 4px 14px;
+  border-radius: 5px;
+  border: none;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.oac-send-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.oac-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oac-abort-btn {
+  padding: 4px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.oac-abort-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}

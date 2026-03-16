@@ -1,0 +1,20 @@
+{
+  "name": "obsidian-ollama-chat",
+  "version": "0.1.0",
+  "description": "AI chat powered by a local Ollama instance.",
+  "main": "main.js",
+  "scripts": {
+    "build": "node esbuild.config.mjs production",
+    "dev": "node esbuild.config.mjs"
+  },
+  "dependencies": {
+    "ai": "^4.0.0",
+    "ollama-ai-provider": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "esbuild": "^0.21.0",
+    "obsidian": "latest",
+    "typescript": "^5.0.0"
+  }
+}

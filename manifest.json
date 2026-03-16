@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-ollama-chat",
+  "name": "Ollama Chat",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "AI chat powered by a local Ollama instance.",
+  "author": "Your Name",
+  "isDesktopOnly": true
+}
