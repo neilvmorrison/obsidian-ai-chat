@@ -2,11 +2,17 @@ import { App, PluginSettingTab, Setting } from "obsidian";
 import type OllamaChatPlugin from "./main";
 
 export interface OllamaChatSettings {
+  // Connection
   model: string;
   baseURL: string;
+  // Context
   contextWindowLines: number;
   systemPromptPrefix: string;
+  // Notes
   saveFolder: string;
+  // Behaviour
+  promptSaveOnClose: boolean;
+  // Internal
   hotkey: string;
 }
 
@@ -16,6 +22,7 @@ export const DEFAULT_SETTINGS: OllamaChatSettings = {
   contextWindowLines: 40,
   systemPromptPrefix: "You are a helpful assistant embedded in Obsidian.",
   saveFolder: "AI Chats",
+  promptSaveOnClose: true,
   hotkey: "Mod+Shift+A",
 };
 
@@ -30,6 +37,9 @@ export class OllamaChatSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    // ── Connection ────────────────────────────────────────────
+    new Setting(containerEl).setName("Connection").setHeading();
 
     new Setting(containerEl)
       .setName("Model")
@@ -56,6 +66,9 @@ export class OllamaChatSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           }),
       );
+
+    // ── Context ───────────────────────────────────────────────
+    new Setting(containerEl).setName("Context").setHeading();
 
     new Setting(containerEl)
       .setName("Context window lines")
@@ -86,6 +99,9 @@ export class OllamaChatSettingTab extends PluginSettingTab {
           }),
       );
 
+    // ── Notes ─────────────────────────────────────────────────
+    new Setting(containerEl).setName("Notes").setHeading();
+
     new Setting(containerEl)
       .setName("Save folder")
       .setDesc("Vault folder where saved chat notes are created")
@@ -95,6 +111,23 @@ export class OllamaChatSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.saveFolder)
           .onChange(async (value) => {
             this.plugin.settings.saveFolder = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    // ── Behaviour ─────────────────────────────────────────────
+    new Setting(containerEl).setName("Behaviour").setHeading();
+
+    new Setting(containerEl)
+      .setName("Prompt to save on close")
+      .setDesc(
+        "Ask whether to save a chat as a note when closing a tab that has messages",
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.promptSaveOnClose)
+          .onChange(async (value) => {
+            this.plugin.settings.promptSaveOnClose = value;
             await this.plugin.saveSettings();
           }),
       );
