@@ -1,4 +1,5 @@
 import type OllamaChatPlugin from '../main';
+import { summarizeNote } from './summarizeNote';
 
 export function registerCommands(plugin: OllamaChatPlugin): void {
   // Ribbon icon
@@ -16,6 +17,12 @@ export function registerCommands(plugin: OllamaChatPlugin): void {
     },
   });
 
+  plugin.addCommand({
+    id: 'summarize-note',
+    name: 'Summarize note',
+    callback: () => summarizeNote(plugin),
+  });
+
   // Editor context menu
   plugin.registerEvent(
     plugin.app.workspace.on('editor-menu', (menu, editor) => {
@@ -27,6 +34,12 @@ export function registerCommands(plugin: OllamaChatPlugin): void {
             const selection = editor.getSelection();
             plugin.openChatView(selection || undefined);
           });
+      });
+      menu.addItem(item => {
+        item
+          .setTitle('Summarize note')
+          .setIcon('sparkles')
+          .onClick(() => summarizeNote(plugin));
       });
     })
   );
