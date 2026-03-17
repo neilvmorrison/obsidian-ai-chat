@@ -1,4 +1,41 @@
 /* ============================================================
+   OAC spacing & sizing tokens
+   All layout values in this file reference these variables.
+   ============================================================ */
+:root {
+  /* Spacing scale */
+  --oac-space-1: 2px;
+  --oac-space-2: 4px;
+  --oac-space-3: 6px;
+  --oac-space-4: 8px;
+  --oac-space-5: 10px;
+  --oac-space-6: 12px;
+  --oac-space-8: 16px;
+  --oac-space-10: 20px;
+
+  /* Border radii */
+  --oac-radius-sm: 3px;
+  --oac-radius-md: 5px;
+  --oac-radius-lg: 8px;
+  --oac-radius-pill: 50%;
+
+  /* Component dimensions */
+  --oac-icon-btn-size: 26px;
+  --oac-close-btn-size: 22px;
+  --oac-scroll-btn-size: 30px;
+  --oac-tab-bar-height: 36px;
+  --oac-toolbar-height: 36px;
+  --oac-tab-max-width: 140px;
+  --oac-icon-size: 14px;
+  --oac-close-icon-size: 13px;
+
+  /* Typography */
+  --oac-font-sm: 0.78em;
+  --oac-font-xs: 0.82em;
+  --oac-font-base: 0.9em;
+}
+
+/* ============================================================
    Obsidian Ollama Chat — styles.css
    All selectors prefixed with .oac- to avoid collisions.
    Only Obsidian CSS variables are used for theming.
@@ -19,16 +56,16 @@
 /* ---- Close view button ---- */
 .oac-close-view-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: var(--oac-space-3);
+  right: var(--oac-space-3);
   z-index: 20;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: var(--oac-close-btn-size);
+  height: var(--oac-close-btn-size);
   padding: 0;
-  border-radius: 4px;
+  border-radius: var(--oac-radius-sm);
   border: none;
   background: transparent;
   color: var(--text-faint);
@@ -41,8 +78,8 @@
 }
 
 .oac-close-view-btn svg {
-  width: 13px;
-  height: 13px;
+  width: var(--oac-close-icon-size);
+  height: var(--oac-close-icon-size);
 }
 
 /* ---- Tab bar (toolbar row) ---- */
@@ -50,19 +87,19 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
+  gap: var(--oac-space-2);
+  padding: var(--oac-space-2) var(--oac-space-4);
   flex-shrink: 0;
   background: transparent;
-  min-height: 36px;
-  margin-top: 32px;
+  min-height: var(--oac-tab-bar-height);
+  margin-top: var(--oac-space-10);
 }
 
 .oac-tabs-row {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: var(--oac-space-1);
   flex: 1;
   overflow-x: auto;
   min-width: 0;
@@ -76,7 +113,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: var(--oac-space-1);
   flex-shrink: 0;
 }
 
@@ -84,17 +121,17 @@
 .oac-tab {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 5px;
+  gap: var(--oac-space-2);
+  padding: var(--oac-space-1) var(--oac-space-5);
+  border-radius: var(--oac-radius-md);
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.82em;
+  font-size: var(--oac-font-xs);
   white-space: nowrap;
-  transition: all 0.1;
-  max-width: 140px;
+  transition: all 0.1s;
+  max-width: var(--oac-tab-max-width);
 }
 
 .oac-chat-root .oac-tab:not(.oac-tab--active) {
@@ -125,13 +162,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
+  width: var(--oac-space-8);
+  height: var(--oac-space-8);
+  border-radius: var(--oac-radius-sm);
   border: none;
   background: transparent;
   color: var(--text-faint);
-  font-size: 0.9em;
+  font-size: var(--oac-font-base);
   cursor: pointer;
   padding: 0;
   line-height: 1;
@@ -148,10 +185,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: var(--oac-icon-btn-size);
+  height: var(--oac-icon-btn-size);
   padding: 0;
-  border-radius: 5px;
+  border-radius: var(--oac-radius-md);
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
@@ -166,8 +203,8 @@
 }
 
 .oac-icon-btn svg {
-  width: 14px;
-  height: 14px;
+  width: var(--oac-icon-size);
+  height: var(--oac-icon-size);
 }
 
 /* ---- Message list container ---- */
@@ -185,8 +222,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 10px;
+  gap: var(--oac-space-5);
+  padding: var(--oac-space-6) var(--oac-space-5);
   scroll-behavior: smooth;
 }
 
@@ -206,10 +243,9 @@
 /* ---- Individual message ---- */
 .oac-message {
   max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: var(--oac-space-4) var(--oac-space-6);
+  border-radius: var(--oac-radius-lg);
   word-break: break-word;
-  white-space: pre-wrap;
   position: relative;
 }
 
@@ -217,14 +253,14 @@
   align-self: flex-end;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  border-bottom-right-radius: 2px;
+  border-bottom-right-radius: var(--oac-space-1);
 }
 
 .oac-message--assistant {
   align-self: flex-start;
   background: var(--background-secondary);
   color: var(--text-normal);
-  border-bottom-left-radius: 2px;
+  border-bottom-left-radius: var(--oac-space-1);
 }
 
 /* Streaming pre node */
@@ -239,29 +275,50 @@
 
 /* Rendered markdown inside assistant bubble */
 .oac-message-rendered {
-  overflow: hidden;
+  overflow: visible;
 }
 
-.oac-message-rendered p:first-child {
+.oac-message-rendered p,
+.oac-message-rendered ul,
+.oac-message-rendered ol,
+.oac-message-rendered blockquote,
+.oac-message-rendered h1,
+.oac-message-rendered h2,
+.oac-message-rendered h3,
+.oac-message-rendered h4,
+.oac-message-rendered h5,
+.oac-message-rendered h6,
+.oac-message-rendered pre {
   margin-top: 0;
+  margin-bottom: var(--oac-space-4);
 }
 
-.oac-message-rendered p:last-child {
+.oac-message-rendered p:last-child,
+.oac-message-rendered ul:last-child,
+.oac-message-rendered ol:last-child,
+.oac-message-rendered blockquote:last-child,
+.oac-message-rendered h1:last-child,
+.oac-message-rendered h2:last-child,
+.oac-message-rendered h3:last-child,
+.oac-message-rendered h4:last-child,
+.oac-message-rendered h5:last-child,
+.oac-message-rendered h6:last-child,
+.oac-message-rendered pre:last-child {
   margin-bottom: 0;
 }
 
 .oac-message-rendered pre {
   background: var(--background-primary);
-  padding: 8px;
-  border-radius: 4px;
+  padding: var(--oac-space-4);
+  border-radius: var(--oac-radius-sm);
   overflow-x: auto;
 }
 
 .oac-message-rendered code {
   background: var(--background-primary);
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-size: 0.9em;
+  padding: var(--oac-space-1) var(--oac-space-2);
+  border-radius: var(--oac-radius-sm);
+  font-size: var(--oac-font-base);
 }
 
 /* ---- Selection popup ---- */
@@ -269,18 +326,18 @@
   position: absolute;
   z-index: 100;
   display: flex;
-  gap: 4px;
+  gap: var(--oac-space-2);
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  padding: 3px 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border-radius: var(--oac-radius-md);
+  padding: var(--oac-space-1) var(--oac-space-2);
+  box-shadow: 0 2px var(--oac-space-4) rgba(0, 0, 0, 0.25);
 }
 
 .oac-selection-btn {
-  padding: 2px 8px;
-  font-size: 0.78em;
-  border-radius: 4px;
+  padding: var(--oac-space-1) var(--oac-space-4);
+  font-size: var(--oac-font-sm);
+  border-radius: var(--oac-radius-sm);
   border: 1px solid var(--background-modifier-border);
   background: transparent;
   color: var(--text-normal);
@@ -297,20 +354,20 @@
 /* ---- Scroll-to-bottom button ---- */
 .oac-scroll-btn {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
+  bottom: var(--oac-space-6);
+  right: var(--oac-space-6);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  width: var(--oac-scroll-btn-size);
+  height: var(--oac-scroll-btn-size);
+  border-radius: var(--oac-radius-pill);
   border: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   color: var(--text-muted);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 var(--oac-space-1) var(--oac-space-3) rgba(0, 0, 0, 0.2);
 }
 
 .oac-scroll-btn:hover {
@@ -319,35 +376,35 @@
 }
 
 .oac-scroll-btn svg {
-  width: 14px;
-  height: 14px;
+  width: var(--oac-icon-size);
+  height: var(--oac-icon-size);
 }
 
 /* ---- Input area ---- */
 .oac-input-area {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: var(--oac-space-3);
+  padding: var(--oac-space-4) var(--oac-space-5);
   border-top: 1px solid var(--background-modifier-border);
-  border-radius: 12px;
+  border-radius: var(--oac-space-6);
   flex-shrink: 0;
   background: var(--background-secondary);
-  margin-bottom: 24px;
+  margin-bottom: var(--oac-space-10);
 }
 
 .oac-input {
   width: 100%;
   resize: none;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 6px 8px;
+  border-radius: var(--oac-space-3);
+  padding: var(--oac-space-3) var(--oac-space-4);
   font-size: var(--font-text-size);
   font-family: inherit;
   background: var(--background-primary);
   color: var(--text-normal);
   line-height: 1.4;
-  max-height: calc(1.4em * 6 + 12px);
+  max-height: calc(1.4em * 6 + var(--oac-space-6));
   overflow-y: auto;
   box-sizing: border-box;
   transition: border-color 0.15s;
@@ -366,25 +423,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  gap: var(--oac-space-3);
 }
 
 .oac-input-actions-left {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--oac-space-2);
 }
 
 .oac-input-actions-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--oac-space-3);
 }
 
 .oac-model-select {
-  font-size: 0.8em;
-  padding: 3px 6px;
-  border-radius: 4px;
+  font-size: var(--oac-font-xs);
+  padding: var(--oac-space-1) var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
   border: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   color: var(--text-muted);
@@ -397,13 +454,13 @@
 }
 
 .oac-send-btn {
-  padding: 4px 14px;
-  border-radius: 5px;
+  padding: var(--oac-space-2) var(--oac-space-8);
+  border-radius: var(--oac-radius-md);
   border: none;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: var(--oac-font-base);
   font-weight: 500;
 }
 
@@ -417,13 +474,13 @@
 }
 
 .oac-abort-btn {
-  padding: 4px 12px;
-  border-radius: 5px;
+  padding: var(--oac-space-2) var(--oac-space-6);
+  border-radius: var(--oac-radius-md);
   border: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: var(--oac-font-base);
 }
 
 .oac-abort-btn:hover {
@@ -434,11 +491,49 @@
 /* ---- Save-on-close modal ---- */
 .oac-modal-desc {
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: var(--oac-space-8);
 }
 
 .oac-modal-btn-row {
   display: flex;
-  gap: 8px;
+  gap: var(--oac-space-4);
   justify-content: flex-end;
+}
+
+/* ---- Visibility utility ---- */
+.oac-hidden {
+  display: none !important;
+}
+
+/* ---- ElaborateView toolbar (was missing) ---- */
+.oac-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--oac-space-3) var(--oac-space-5);
+  flex-shrink: 0;
+  min-height: var(--oac-toolbar-height);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.oac-title {
+  font-size: var(--oac-font-base);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.oac-clear-btn {
+  padding: var(--oac-space-1) var(--oac-space-5);
+  font-size: var(--oac-font-xs);
+  border-radius: var(--oac-radius-md);
+  border: 1px solid var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.oac-clear-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
 }

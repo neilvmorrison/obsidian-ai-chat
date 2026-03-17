@@ -2,6 +2,8 @@ import { ItemView, WorkspaceLeaf, Notice } from 'obsidian';
 import type OllamaChatPlugin from '../main';
 import { ChatSession } from './ChatSession';
 import { appendMessage } from './renderMessage';
+import { createInputArea, createMessageList } from '../ui';
+import type { InputAreaHandle, MessageListHandle } from '../ui';
 
 export const ELABORATE_VIEW_TYPE = 'ollama-elaborate-view';
 
@@ -14,10 +16,8 @@ export interface ElaborateOptions {
 export class ElaborateView extends ItemView {
   plugin: OllamaChatPlugin;
   session: ChatSession;
-  private messageList!: HTMLElement;
-  private textarea!: HTMLTextAreaElement;
-  private sendBtn!: HTMLButtonElement;
-  private abortBtn!: HTMLButtonElement;
+  private inputArea!: InputAreaHandle;
+  private msgList!: MessageListHandle;
   private isStreaming = false;
   private pendingOptions?: ElaborateOptions;
 
@@ -50,37 +50,22 @@ export class ElaborateView extends ItemView {
     const clearBtn = toolbar.createEl('button', { cls: 'oac-clear-btn', text: 'Clear' });
 
     // Message list
-    this.messageList = root.createEl('div', { cls: 'oac-message-list' });
+    this.msgList = createMessageList(root, { emptyText: "Let's Chat!" });
 
     // Input area
-    const inputArea = root.createEl('div', { cls: 'oac-input-area' });
-    this.textarea = inputArea.createEl('textarea', {
-      cls: 'oac-input',
-      attr: { placeholder: 'Ask anything…', rows: '1' },
-    }) as HTMLTextAreaElement;
-    const inputActions = inputArea.createEl('div', { cls: 'oac-input-actions' });
-    this.abortBtn = inputActions.createEl('button', { cls: 'oac-abort-btn', text: 'Stop' });
-    this.abortBtn.style.display = 'none';
-    this.sendBtn = inputActions.createEl('button', { cls: 'oac-send-btn', text: 'Send' });
-
-    this.textarea.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        this.handleSend();
-      }
+    this.inputArea = createInputArea(root, {
+      onSend: () => this.handleSend(),
+      onAbort: () => this.session.abort(),
     });
 
-    this.sendBtn.addEventListener('click', () => this.handleSend());
-    this.abortBtn.addEventListener('click', () => this.session.abort());
     clearBtn.addEventListener('click', () => this.handleClear());
-    this.textarea.addEventListener('input', () => this.resizeTextarea());
 
     // Apply pending options if set before onOpen was called
     if (this.pendingOptions) {
       await this.applyOptions(this.pendingOptions);
       this.pendingOptions = undefined;
     } else {
-      this.textarea.focus();
+      this.inputArea.textarea.focus();
     }
   }
 
@@ -89,64 +74,54 @@ export class ElaborateView extends ItemView {
   }
 
   async applyOptions(opts: ElaborateOptions): Promise<void> {
-    // If the view isn't fully built yet, queue the options
-    if (!this.textarea) {
+    if (!this.inputArea) {
       this.pendingOptions = opts;
       return;
     }
 
     this.session.clear();
-    this.messageList.empty();
+    this.msgList.listEl.empty();
+    this.msgList.setEmpty(true);
 
-    this.textarea.value = opts.prefillText;
-    this.resizeTextarea();
+    this.inputArea.textarea.value = opts.prefillText;
+    this.inputArea.resizeTextarea();
 
     if (opts.autoSend) {
       await this.handleSendWithContext(opts.prefillText, opts.systemContext);
-      this.textarea.value = '';
-      this.resizeTextarea();
+      this.inputArea.textarea.value = '';
+      this.inputArea.resizeTextarea();
     } else {
-      this.textarea.focus();
-      // Position cursor at end
-      this.textarea.selectionStart = this.textarea.value.length;
-      this.textarea.selectionEnd = this.textarea.value.length;
+      this.inputArea.textarea.focus();
+      this.inputArea.textarea.selectionStart = this.inputArea.textarea.value.length;
+      this.inputArea.textarea.selectionEnd = this.inputArea.textarea.value.length;
     }
   }
 
-  private resizeTextarea(): void {
-    this.textarea.style.height = 'auto';
-    const lineHeight = parseInt(getComputedStyle(this.textarea).lineHeight) || 20;
-    const maxHeight = lineHeight * 6;
-    this.textarea.style.height = Math.min(this.textarea.scrollHeight, maxHeight) + 'px';
-  }
-
-  private setStreaming(streaming: boolean): void {
-    this.isStreaming = streaming;
-    this.sendBtn.disabled = streaming;
-    this.abortBtn.style.display = streaming ? 'inline-flex' : 'none';
-  }
-
   private async handleSend(): Promise<void> {
-    const text = this.textarea.value.trim();
+    const text = this.inputArea.textarea.value.trim();
     if (!text || this.isStreaming) return;
 
-    this.textarea.value = '';
-    this.resizeTextarea();
+    this.inputArea.textarea.value = '';
+    this.inputArea.resizeTextarea();
 
     await this.handleSendWithContext(text, '');
   }
 
   private async handleSendWithContext(text: string, systemContext: string): Promise<void> {
     const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
-    const userHandle = appendMessage(this.messageList, 'user', this.app, this, sourcePath);
+
+    this.msgList.setEmpty(false);
+
+    const userHandle = appendMessage(this.msgList.listEl, 'user', this.app, this, sourcePath);
     userHandle.appendChunk(text);
     await userHandle.finalise();
-    this.scrollToBottom();
+    this.msgList.scrollToBottom();
 
-    const assistantHandle = appendMessage(this.messageList, 'assistant', this.app, this, sourcePath);
-    this.scrollToBottom();
+    const assistantHandle = appendMessage(this.msgList.listEl, 'assistant', this.app, this, sourcePath);
+    this.msgList.scrollToBottom();
 
-    this.setStreaming(true);
+    this.isStreaming = true;
+    this.inputArea.controls.setStreaming(true);
 
     try {
       const systemParts = [this.plugin.settings.systemPromptPrefix];
@@ -157,22 +132,20 @@ export class ElaborateView extends ItemView {
 
       await this.session.send(text, systemPrompt, chunk => {
         assistantHandle.appendChunk(chunk);
-        this.scrollToBottom();
+        this.msgList.scrollToBottom();
       }, () => assistantHandle.finalise());
     } catch (err) {
       new Notice(`Elaborate error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      this.setStreaming(false);
-      this.scrollToBottom();
+      this.isStreaming = false;
+      this.inputArea.controls.setStreaming(false);
+      this.msgList.scrollToBottom();
     }
-  }
-
-  private scrollToBottom(): void {
-    this.messageList.scrollTop = this.messageList.scrollHeight;
   }
 
   private handleClear(): void {
     this.session.clear();
-    this.messageList.empty();
+    this.msgList.listEl.empty();
+    this.msgList.setEmpty(true);
   }
 }

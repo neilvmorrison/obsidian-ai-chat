@@ -3,6 +3,20 @@ import type OllamaChatPlugin from "../main";
 import { ChatSession } from "./ChatSession";
 import { appendMessage } from "./renderMessage";
 import { buildContext } from "../context/buildContext";
+import {
+  createInputArea,
+  createMessageList,
+  createTabBar,
+  createEmptyState,
+  createModelSelect,
+  createIconButton,
+} from "../ui";
+import type {
+  InputAreaHandle,
+  MessageListHandle,
+  TabBarHandle,
+  EmptyStateHandle,
+} from "../ui";
 
 export const CHAT_VIEW_TYPE = "ollama-chat-view";
 
@@ -12,6 +26,7 @@ interface Tab {
   messageListEl: HTMLElement;
   tabEl: HTMLButtonElement;
   closeEl: HTMLButtonElement;
+  emptyState: EmptyStateHandle;
 }
 
 // ── Save-on-close modal ────────────────────────────────────────────────────
@@ -68,22 +83,15 @@ class SaveOnCloseModal extends Modal {
 
 export class ChatView extends ItemView {
   plugin: OllamaChatPlugin;
-  textarea!: HTMLTextAreaElement;
-  private sendBtn!: HTMLButtonElement;
-  private abortBtn!: HTMLButtonElement;
-  private modelSelect!: HTMLSelectElement;
+  private inputArea!: InputAreaHandle;
+  private msgList!: MessageListHandle;
+  private tabBarHandle!: TabBarHandle;
+  private noTabsEmptyState!: EmptyStateHandle;
   private isStreaming = false;
   prefillText?: string;
 
   private tabs: Tab[] = [];
   private activeTabIndex = 0;
-  private tabBar!: HTMLElement;
-  private tabsRow!: HTMLElement;
-  private messageListContainer!: HTMLElement;
-  private noTabsStateEl!: HTMLElement;
-  private scrollBtn!: HTMLButtonElement;
-  private saveBtn!: HTMLButtonElement;
-  private newChatBtn!: HTMLButtonElement;
 
   constructor(leaf: WorkspaceLeaf, plugin: OllamaChatPlugin) {
     super(leaf);
@@ -100,6 +108,10 @@ export class ChatView extends ItemView {
 
   getIcon(): string {
     return "bot-message-square";
+  }
+
+  get textarea(): HTMLTextAreaElement {
+    return this.inputArea.textarea;
   }
 
   private get messageList(): HTMLElement {
@@ -124,129 +136,50 @@ export class ChatView extends ItemView {
     });
 
     // Tab bar
-    this.tabBar = root.createEl("div", { cls: "oac-tab-bar" });
-    this.tabBar.style.display = "none";
-    this.tabsRow = this.tabBar.createEl("div", { cls: "oac-tabs-row" });
-    const toolbarRight = this.tabBar.createEl("div", {
-      cls: "oac-toolbar-right",
+    this.tabBarHandle = createTabBar(root, {
+      onSave: () => this.handleSave(),
+      onNewChat: () => this.createTab(),
     });
 
-    this.saveBtn = toolbarRight.createEl("button", {
-      cls: "oac-icon-btn oac-save-btn",
-    });
-    setIcon(this.saveBtn, "save");
-    this.saveBtn.setAttribute("aria-label", "Save as Note");
-    this.saveBtn.style.display = "none";
-
-    this.newChatBtn = toolbarRight.createEl("button", {
-      cls: "oac-icon-btn oac-new-chat-btn",
-    });
-    setIcon(this.newChatBtn, "plus");
-    this.newChatBtn.setAttribute("aria-label", "New Chat");
-    this.newChatBtn.style.display = "none";
-
-    // Message list container
-    this.messageListContainer = root.createEl("div", {
-      cls: "oac-message-list-container",
-    });
+    // Message list container (with scroll button)
+    this.msgList = createMessageList(root, { withScrollBtn: true });
 
     // No-tabs empty state (shown when all tabs are closed)
-    this.noTabsStateEl = this.messageListContainer.createEl("div", {
-      cls: "oac-empty-state oac-no-tabs-state",
+    this.noTabsEmptyState = createEmptyState(this.msgList.el, {
       text: "Let's Chat!",
-    });
-    this.noTabsStateEl.style.display = "flex";
-
-    // Scroll-to-bottom button
-    this.scrollBtn = this.messageListContainer.createEl("button", {
-      cls: "oac-scroll-btn",
-    });
-    setIcon(this.scrollBtn, "arrow-down");
-    this.scrollBtn.setAttribute("aria-label", "Scroll to bottom");
-    this.scrollBtn.style.display = "none";
-    this.scrollBtn.addEventListener("click", () => {
-      this.scrollToBottom();
-      this.hideScrollBtn();
     });
 
     // Input area
-    const inputArea = root.createEl("div", { cls: "oac-input-area" });
-    this.textarea = inputArea.createEl("textarea", {
-      cls: "oac-input",
-      attr: { placeholder: "Ask anything…", rows: "1" },
-    }) as HTMLTextAreaElement;
-
-    const inputActions = inputArea.createEl("div", {
-      cls: "oac-input-actions",
-    });
-    const inputActionsLeft = inputActions.createEl("div", {
-      cls: "oac-input-actions-left",
-    });
-    const inputActionsRight = inputActions.createEl("div", {
-      cls: "oac-input-actions-right",
+    this.inputArea = createInputArea(root, {
+      onSend: () => this.handleSend(),
+      onAbort: () => this.activeSession.abort(),
     });
 
-    const uploadBtn = inputActionsLeft.createEl("button", {
-      cls: "oac-icon-btn oac-upload-btn",
-    });
-    setIcon(uploadBtn, "upload");
-    uploadBtn.setAttribute("aria-label", "Upload image");
-
-    this.modelSelect = inputActionsLeft.createEl("select", {
-      cls: "oac-model-select",
-    }) as HTMLSelectElement;
-    const initialOption = this.modelSelect.createEl("option", {
-      text: this.plugin.settings.model,
-    });
-    initialOption.value = this.plugin.settings.model;
-    this.modelSelect.addEventListener("change", async () => {
-      this.plugin.settings.model = this.modelSelect.value;
-      await this.plugin.saveSettings();
-    });
-    this.fetchModels().then((models) => {
-      const current = this.plugin.settings.model;
-      this.modelSelect.empty();
-      if (!models.includes(current)) models.unshift(current);
-      for (const m of models) {
-        const opt = this.modelSelect.createEl("option", { text: m });
-        opt.value = m;
-        if (m === current) opt.selected = true;
-      }
+    // Upload button + model select in the left action slot
+    createIconButton(this.inputArea.actionsLeftEl, {
+      icon: "upload",
+      label: "Upload image",
+      cls: ["oac-icon-btn", "oac-upload-btn"],
+      onClick: () => { /* placeholder */ },
     });
 
-    this.abortBtn = inputActionsRight.createEl("button", {
-      cls: "oac-abort-btn",
-      text: "Stop",
+    createModelSelect(this.inputArea.actionsLeftEl, {
+      currentModel: this.plugin.settings.model,
+      baseURL: this.plugin.settings.baseURL,
+      onModelChange: async (model) => {
+        this.plugin.settings.model = model;
+        await this.plugin.saveSettings();
+      },
     });
-    this.abortBtn.style.display = "none";
-    this.sendBtn = inputActionsRight.createEl("button", {
-      cls: "oac-send-btn",
-      text: "Send",
-    });
-
-    // Wire up events
-    this.textarea.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        this.handleSend();
-      }
-    });
-    this.textarea.addEventListener("input", () => this.resizeTextarea());
-    this.sendBtn.addEventListener("click", () => this.handleSend());
-    this.abortBtn.addEventListener("click", () => this.activeSession.abort());
-    this.saveBtn.addEventListener("click", () => this.handleSave());
-    this.newChatBtn.addEventListener("click", () => this.createTab());
-
-    this.noTabsStateEl.style.display = "flex";
 
     // Pre-fill if provided
     if (this.prefillText) {
-      this.textarea.value = this.prefillText;
-      this.resizeTextarea();
+      this.inputArea.textarea.value = this.prefillText;
+      this.inputArea.resizeTextarea();
       this.prefillText = undefined;
     }
 
-    this.textarea.focus();
+    this.inputArea.textarea.focus();
   }
 
   async onClose(): Promise<void> {
@@ -257,7 +190,7 @@ export class ChatView extends ItemView {
     const tabIndex = this.tabs.length;
     const session = new ChatSession(this.plugin.settings);
 
-    const tabEl = this.tabsRow.createEl("button", { cls: "oac-tab" });
+    const tabEl = this.tabBarHandle.tabsRow.createEl("button", { cls: "oac-tab" }) as HTMLButtonElement;
     tabEl.createEl("span", {
       text: `Chat ${tabIndex + 1}`,
       cls: "oac-tab-label",
@@ -265,15 +198,21 @@ export class ChatView extends ItemView {
     const closeEl = tabEl.createEl("button", {
       cls: "oac-tab-close",
       text: "×",
-    });
+    }) as HTMLButtonElement;
 
-    const messageListEl = this.messageListContainer.createEl("div", {
+    const messageListEl = this.msgList.el.createEl("div", {
       cls: "oac-message-list",
     });
-    messageListEl.style.display = "none";
-    messageListEl.createEl("div", {
-      cls: "oac-empty-state",
-      text: "Let's Chat!",
+    messageListEl.addClass("oac-hidden");
+
+    const emptyState = createEmptyState(messageListEl, { text: "Let's Chat!" });
+
+    messageListEl.addEventListener("scroll", () => {
+      if (this.tabs[this.activeTabIndex]?.messageListEl === messageListEl) {
+        const atBottom =
+          messageListEl.scrollHeight - messageListEl.scrollTop - messageListEl.clientHeight < 80;
+        if (atBottom) this.msgList.hideScrollBtn();
+      }
     });
 
     const tab: Tab = {
@@ -282,6 +221,7 @@ export class ChatView extends ItemView {
       messageListEl,
       tabEl,
       closeEl,
+      emptyState,
     };
     this.tabs.push(tab);
 
@@ -295,36 +235,26 @@ export class ChatView extends ItemView {
       this.closeTab(this.tabs.indexOf(tab));
     });
 
-    messageListEl.addEventListener("scroll", () => {
-      if (
-        this.tabs[this.activeTabIndex]?.messageListEl === messageListEl &&
-        this.isNearBottom(messageListEl)
-      ) {
-        this.hideScrollBtn();
-      }
-    });
-
-    this.noTabsStateEl.style.display = "none";
+    this.noTabsEmptyState.hide();
     this.switchToTab(this.tabs.length - 1);
     this.updateCloseButtons();
   }
 
   private switchToTab(index: number): void {
     if (this.tabs[this.activeTabIndex]) {
-      this.tabs[this.activeTabIndex].messageListEl.style.display = "none";
+      this.tabs[this.activeTabIndex].messageListEl.addClass("oac-hidden");
       this.tabs[this.activeTabIndex].tabEl.removeClass("oac-tab--active");
     }
     this.activeTabIndex = index;
-    this.tabs[index].messageListEl.style.display = "flex";
+    this.tabs[index].messageListEl.removeClass("oac-hidden");
     this.tabs[index].tabEl.addClass("oac-tab--active");
     this.updateToolbar();
-    this.textarea?.focus();
+    this.inputArea?.textarea.focus();
   }
 
   private async closeTab(index: number): Promise<void> {
     const tab = this.tabs[index];
 
-    // Prompt to save if there are messages and the setting is on
     if (
       tab.session.messages.length > 0 &&
       this.plugin.settings.promptSaveOnClose
@@ -341,13 +271,13 @@ export class ChatView extends ItemView {
 
     if (this.tabs.length === 0) {
       this.activeTabIndex = 0;
-      this.noTabsStateEl.style.display = "flex";
-      this.tabBar.style.display = "none";
-      this.saveBtn.style.display = "none";
-      this.newChatBtn.style.display = "none";
+      this.noTabsEmptyState.show();
+      this.tabBarHandle.setVisible(false);
+      this.tabBarHandle.setSaveVisible(false);
+      this.tabBarHandle.setNewChatVisible(false);
     } else {
       const nextIndex = Math.min(index, this.tabs.length - 1);
-      this.activeTabIndex = -1; // force switchToTab to re-apply
+      this.activeTabIndex = -1;
       this.switchToTab(nextIndex);
     }
 
@@ -357,15 +287,14 @@ export class ChatView extends ItemView {
   private updateToolbar(): void {
     const hasTabs = this.tabs.length > 0;
     const hasContent = hasTabs && this.activeSession.messages.length > 0;
-    this.tabBar.style.display = hasTabs ? "flex" : "none";
-    this.saveBtn.style.display = hasContent ? "inline-flex" : "none";
-    this.newChatBtn.style.display = hasContent ? "inline-flex" : "none";
+    this.tabBarHandle.setVisible(hasTabs);
+    this.tabBarHandle.setSaveVisible(hasContent);
+    this.tabBarHandle.setNewChatVisible(hasContent);
   }
 
   private updateCloseButtons(): void {
-    // Always show close buttons so any tab (including the last) can be closed
     this.tabs.forEach((t) => {
-      t.closeEl.style.display = "inline-flex";
+      t.closeEl.removeClass("oac-hidden");
     });
   }
 
@@ -375,32 +304,8 @@ export class ChatView extends ItemView {
     });
   }
 
-  private async fetchModels(): Promise<string[]> {
-    const tagsURL = this.plugin.settings.baseURL.replace(/\/+$/, "") + "/tags";
-    const response = await fetch(tagsURL);
-    if (!response.ok) throw new Error("Failed to fetch models");
-    const data = await response.json();
-    return (data.models ?? []).map((m: { name: string }) => m.name);
-  }
-
-  private resizeTextarea(): void {
-    this.textarea.style.height = "auto";
-    const lineHeight =
-      parseInt(getComputedStyle(this.textarea).lineHeight) || 20;
-    const maxHeight = lineHeight * 6;
-    this.textarea.style.height =
-      Math.min(this.textarea.scrollHeight, maxHeight) + "px";
-  }
-
-  private setStreaming(streaming: boolean): void {
-    this.isStreaming = streaming;
-    this.sendBtn.disabled = streaming;
-    this.abortBtn.style.display = streaming ? "inline-flex" : "none";
-  }
-
   private removeEmptyState(): void {
-    const emptyState = this.messageList.querySelector(".oac-empty-state");
-    if (emptyState) emptyState.remove();
+    this.tabs[this.activeTabIndex].emptyState.hide();
   }
 
   private async handleSend(): Promise<void> {
@@ -408,11 +313,11 @@ export class ChatView extends ItemView {
       this.createTab();
     }
 
-    const text = this.textarea.value.trim();
+    const text = this.inputArea.textarea.value.trim();
     if (!text || this.isStreaming) return;
 
-    this.textarea.value = "";
-    this.resizeTextarea();
+    this.inputArea.textarea.value = "";
+    this.inputArea.resizeTextarea();
     this.removeEmptyState();
 
     const sourcePath = this.app.workspace.getActiveFile()?.path ?? "";
@@ -439,7 +344,8 @@ export class ChatView extends ItemView {
         this.openElaborateView(selectedText, parentMessage, false),
     );
     this.scrollToBottom();
-    this.setStreaming(true);
+    this.isStreaming = true;
+    this.inputArea.controls.setStreaming(true);
 
     try {
       const context = await buildContext(
@@ -467,8 +373,9 @@ export class ChatView extends ItemView {
         `AI Chat error: ${err instanceof Error ? err.message : String(err)}`,
       );
     } finally {
-      this.setStreaming(false);
-      if (!this.isNearBottom()) this.showScrollBtn();
+      this.isStreaming = false;
+      this.inputArea.controls.setStreaming(false);
+      if (!this.isNearBottom()) this.msgList.showScrollBtn();
     }
   }
 
@@ -476,23 +383,16 @@ export class ChatView extends ItemView {
     this.messageList.scrollTop = this.messageList.scrollHeight;
   }
 
-  private isNearBottom(el: HTMLElement = this.messageList): boolean {
+  private isNearBottom(): boolean {
+    const el = this.messageList;
     return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-  }
-
-  private showScrollBtn(): void {
-    this.scrollBtn.style.display = "flex";
-  }
-
-  private hideScrollBtn(): void {
-    this.scrollBtn.style.display = "none";
   }
 
   private smartScroll(): void {
     if (this.isNearBottom()) {
       this.scrollToBottom();
     } else {
-      this.showScrollBtn();
+      this.msgList.showScrollBtn();
     }
   }
 
