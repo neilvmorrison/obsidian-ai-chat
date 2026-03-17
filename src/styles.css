@@ -115,7 +115,6 @@
   height: 0;
 }
 
-
 /* ---- Tabs ---- */
 .oac-tab {
   display: inline-flex;
@@ -520,7 +519,8 @@
   position: fixed;
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  max-width: min(420px, 90vw);
 }
 
 .oac-inline-generate-chevron {
@@ -535,7 +535,7 @@
 }
 
 .oac-inline-generate-input {
-  min-width: 160px;
+  width: 100%;
   padding: 0;
   background: transparent;
   border: none;
@@ -545,6 +545,8 @@
   line-height: inherit;
   outline: none !important;
   box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
 }
 
 .oac-inline-generate-input::placeholder {

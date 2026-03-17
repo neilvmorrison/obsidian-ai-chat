@@ -80,22 +80,22 @@ export class InlineGenerateSuggest extends EditorSuggest<GenerateSuggestion> {
     wrapper.className = "oac-inline-generate-wrapper";
     wrapper.style.left = `${coords.left}px`;
     wrapper.style.top = `${coords.top}px`;
-    wrapper.style.height = `${coords.bottom - coords.top}px`;
 
     const chevron = document.createElement("span");
     chevron.className = "oac-inline-generate-chevron";
     chevron.textContent = "❯";
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.placeholder = "Describe what to write here…";
-    input.className = "oac-inline-generate-input";
-    input.style.outline = "none";
+    const textarea = document.createElement("textarea");
+    textarea.rows = 1;
+    textarea.placeholder = "Describe what to write here…";
+    textarea.className = "oac-inline-generate-input";
+    textarea.style.outline = "none";
+    textarea.style.border = "none";
 
     wrapper.appendChild(chevron);
-    wrapper.appendChild(input);
+    wrapper.appendChild(textarea);
     document.body.appendChild(wrapper);
-    input.focus();
+    textarea.focus();
 
     let dismissed = false;
     const dismiss = () => {
@@ -104,16 +104,16 @@ export class InlineGenerateSuggest extends EditorSuggest<GenerateSuggestion> {
       wrapper.remove();
     };
 
-    input.addEventListener("keydown", async (e) => {
+    textarea.addEventListener("keydown", async (e) => {
       if (e.key === "Escape") {
         dismiss();
         editor.focus();
         return;
       }
 
-      if (e.key === "Enter") {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        const prompt = input.value.trim();
+        const prompt = textarea.value.trim();
         dismiss();
         editor.focus();
         if (prompt) {
@@ -122,12 +122,13 @@ export class InlineGenerateSuggest extends EditorSuggest<GenerateSuggestion> {
       }
     });
 
-    // Auto-size width as user types
-    input.addEventListener("input", () => {
-      input.style.width = `${Math.max(200, input.scrollWidth + 4)}px`;
+    // Auto-grow height as user types
+    textarea.addEventListener("input", () => {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
     });
 
-    input.addEventListener("blur", () => {
+    textarea.addEventListener("blur", () => {
       // Slight delay so keydown → Enter has time to fire first
       setTimeout(dismiss, 150);
     });
