@@ -392,6 +392,7 @@ export class ChatView extends ItemView {
           await assistantHandle.finalise();
           this.updateToolbar();
         },
+        sourcePath || undefined,
       );
     } catch (err) {
       new Notice(
@@ -424,7 +425,6 @@ export class ChatView extends ItemView {
   private async saveTabSession(tab: Tab): Promise<void> {
     if (tab.session.messages.length === 0) return;
 
-    const transcript = tab.session.serialize();
     const folder = this.plugin.settings.saveFolder;
 
     let title: string;
@@ -437,6 +437,7 @@ export class ChatView extends ItemView {
       title = `Chat ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}-${pad(now.getMinutes())}`;
     }
 
+    const transcript = tab.session.serialize(title);
     const fileName = `${folder}/${title}.md`;
     try {
       if (!this.app.vault.getAbstractFileByPath(folder)) {

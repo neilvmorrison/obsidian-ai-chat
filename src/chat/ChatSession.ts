@@ -9,6 +9,8 @@ export interface Message {
 
 export class ChatSession {
   messages: Message[] = [];
+  readonly createdAt: Date = new Date();
+  readonly contextNotes: Set<string> = new Set();
   private abortController: AbortController | null = null;
   private settings: OllamaChatSettings;
 
@@ -26,7 +28,9 @@ export class ChatSession {
     systemPrompt: string,
     onChunk: (chunk: string) => void,
     onComplete: () => Promise<void>,
+    activeNotePath?: string,
   ): Promise<void> {
+    if (activeNotePath) this.contextNotes.add(activeNotePath);
     this.messages.push({ role: "user", content: userContent });
 
     this.abortController = new AbortController();
@@ -97,18 +101,35 @@ export class ChatSession {
     );
   }
 
-  serialize(): string {
-    const lines: string[] = [];
+  serialize(title: string): string {
+    const userTurns = this.messages.filter((m) => m.role === "user").length;
+    const notes = [...this.contextNotes];
 
+    const yamlLines: string[] = ["---"];
+    yamlLines.push(`title: "${title.replace(/"/g, '\\"')}"`);
+    yamlLines.push(`date: ${this.createdAt.toISOString()}`);
+    yamlLines.push(`model: ${this.settings.model}`);
+    yamlLines.push(`turns: ${userTurns}`);
+    yamlLines.push(`message_count: ${this.messages.length}`);
+    if (notes.length > 0) {
+      yamlLines.push("context_notes:");
+      for (const n of notes) yamlLines.push(`  - "${n.replace(/"/g, '\\"')}"`);
+    }
+    yamlLines.push(`tags:`);
+    yamlLines.push(`  - ai-chat`);
+    yamlLines.push("---");
+    yamlLines.push("");
+
+    const bodyLines: string[] = [];
     for (const msg of this.messages) {
       const label = msg.role === "user" ? "**User:**" : "**Assistant:**";
-      lines.push(label);
-      lines.push("");
-      lines.push(msg.content);
-      lines.push("");
+      bodyLines.push(label);
+      bodyLines.push("");
+      bodyLines.push(msg.content);
+      bodyLines.push("");
     }
 
-    return lines.join("\n");
+    return yamlLines.join("\n") + bodyLines.join("\n");
   }
 
   clear(): void {
