@@ -41,6 +41,12 @@
    Only Obsidian CSS variables are used for theming.
    ============================================================ */
 
+/* Global focus reset — no browser outline on any plugin element */
+[class^="oac-"]:focus,
+[class*=" oac-"]:focus {
+  outline: none;
+}
+
 /* Root container */
 .oac-chat-root {
   display: flex;
@@ -231,13 +237,43 @@
 .oac-empty-state {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.oac-empty-label {
   font-size: 1.4em;
   font-weight: 600;
   color: var(--text-faint);
-  pointer-events: none;
-  user-select: none;
+}
+
+.oac-empty-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #06b6d4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 24px 0 rgba(124, 58, 237, 0.25);
+}
+
+.oac-empty-logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.oac-empty-logo-icon svg {
+  width: 42px;
+  height: 42px;
+  stroke: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
 }
 
 /* ---- Individual message ---- */
@@ -501,25 +537,44 @@
 }
 
 /* ---- Inline generate input ---- */
-.oac-inline-generate-input {
+.oac-inline-generate-wrapper {
   position: fixed;
   z-index: 1000;
-  min-width: 200px;
-  padding: 0 var(--oac-space-2);
+  display: flex;
+  align-items: center;
+}
+
+.oac-inline-generate-chevron {
+  color: var(--interactive-accent);
+  font-size: var(--font-text-size);
+  font-family: var(--font-text);
+  line-height: inherit;
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.8;
+  padding-right: var(--oac-space-1);
+}
+
+.oac-inline-generate-input {
+  min-width: 160px;
+  padding: 0;
   background: transparent;
   border: none;
-  /* border-bottom: 1px solid var(--interactive-accent); */
   color: var(--text-normal);
   font-family: var(--font-text);
   font-size: var(--font-text-size);
   line-height: inherit;
-  outline: none;
-  /* caret-color: var(--interactive-accent); */
+  outline: none !important;
   box-sizing: border-box;
 }
 
 .oac-inline-generate-input::placeholder {
   color: var(--text-faint);
+}
+
+.oac-inline-generate-input:focus {
+  outline: none;
+  border: none;
 }
 
 /* ---- Visibility utility ---- */

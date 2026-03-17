@@ -1,3 +1,5 @@
+import { setIcon } from 'obsidian';
+
 export interface EmptyStateHandle {
   el: HTMLElement;
   show(): void;
@@ -17,7 +19,13 @@ export function createEmptyState(
   const extra = props.cls
     ? Array.isArray(props.cls) ? props.cls : [props.cls]
     : [];
-  const el = parent.createEl('div', { cls: [baseCls, ...extra], text: props.text });
+  const el = parent.createEl('div', { cls: [baseCls, ...extra] });
+
+  const logo = el.createEl('div', { cls: 'oac-empty-logo' });
+  const iconWrap = logo.createEl('div', { cls: 'oac-empty-logo-icon' });
+  setIcon(iconWrap, 'bot-message-square');
+
+  el.createEl('span', { text: props.text, cls: 'oac-empty-label' });
 
   return {
     el,

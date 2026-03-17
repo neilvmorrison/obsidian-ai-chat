@@ -76,22 +76,32 @@ export class InlineGenerateSuggest extends EditorSuggest<GenerateSuggestion> {
       cm.coordsAtPos(docOffset);
     if (!coords) return;
 
+    const wrapper = document.createElement("div");
+    wrapper.className = "oac-inline-generate-wrapper";
+    wrapper.style.left = `${coords.left}px`;
+    wrapper.style.top = `${coords.top}px`;
+    wrapper.style.height = `${coords.bottom - coords.top}px`;
+
+    const chevron = document.createElement("span");
+    chevron.className = "oac-inline-generate-chevron";
+    chevron.textContent = "❯";
+
     const input = document.createElement("input");
     input.type = "text";
-    input.placeholder = "Generate text about…";
+    input.placeholder = "Describe what to write here…";
     input.className = "oac-inline-generate-input";
-    input.style.left = `${coords.left}px`;
-    input.style.top = `${coords.top}px`;
-    input.style.height = `${coords.bottom - coords.top}px`;
+    input.style.outline = "none";
 
-    document.body.appendChild(input);
+    wrapper.appendChild(chevron);
+    wrapper.appendChild(input);
+    document.body.appendChild(wrapper);
     input.focus();
 
     let dismissed = false;
     const dismiss = () => {
       if (dismissed) return;
       dismissed = true;
-      input.remove();
+      wrapper.remove();
     };
 
     input.addEventListener("keydown", async (e) => {
