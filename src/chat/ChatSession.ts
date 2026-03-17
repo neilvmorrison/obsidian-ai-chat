@@ -24,6 +24,7 @@ export class ChatSession {
     userContent: string,
     systemPrompt: string,
     onChunk: (chunk: string) => void,
+    onComplete: () => Promise<void>,
   ): Promise<void> {
     this.messages.push({ role: "user", content: userContent });
 
@@ -46,11 +47,13 @@ export class ChatSession {
         onChunk(chunk);
       }
 
+      await onComplete();
       this.messages.push({ role: "assistant", content: fullText });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
         // Aborted by user — still record whatever was streamed
         if (fullText) {
+          await onComplete();
           this.messages.push({
             role: "assistant",
             content: fullText + "\n\n_(aborted)_",

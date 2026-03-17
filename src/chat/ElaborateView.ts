@@ -137,12 +137,13 @@ export class ElaborateView extends ItemView {
   }
 
   private async handleSendWithContext(text: string, systemContext: string): Promise<void> {
-    const userHandle = appendMessage(this.messageList, 'user', this.app);
+    const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
+    const userHandle = appendMessage(this.messageList, 'user', this.app, this, sourcePath);
     userHandle.appendChunk(text);
     await userHandle.finalise();
     this.scrollToBottom();
 
-    const assistantHandle = appendMessage(this.messageList, 'assistant', this.app);
+    const assistantHandle = appendMessage(this.messageList, 'assistant', this.app, this, sourcePath);
     this.scrollToBottom();
 
     this.setStreaming(true);
@@ -157,9 +158,7 @@ export class ElaborateView extends ItemView {
       await this.session.send(text, systemPrompt, chunk => {
         assistantHandle.appendChunk(chunk);
         this.scrollToBottom();
-      });
-
-      await assistantHandle.finalise();
+      }, () => assistantHandle.finalise());
     } catch (err) {
       new Notice(`Elaborate error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {

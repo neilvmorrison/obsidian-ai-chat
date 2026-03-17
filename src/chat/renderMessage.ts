@@ -12,11 +12,13 @@ export function appendMessage(
   container: HTMLElement,
   role: 'user' | 'assistant',
   app: App,
+  component: Component,
+  sourcePath: string,
   onElaborate?: SelectionHandler,
   onAskAbout?: SelectionHandler
 ): MessageHandle {
   const el = container.createEl('div', {
-    cls: `oac-message oac-message--${role}`,
+    cls: `oac-message oac-message--${role} markdown-rendered`,
   });
 
   const pre = el.createEl('pre', { cls: 'oac-message-pre' });
@@ -27,15 +29,17 @@ export function appendMessage(
     pre.textContent = fullText;
   }
 
-  async function finalise(): Promise<void> {
-    pre.remove();
-    const rendered = el.createEl('div', { cls: 'oac-message-rendered' });
-    await MarkdownRenderer.render(app, fullText, rendered, '', new Component());
-
-    if (role === 'assistant' && (onElaborate || onAskAbout)) {
-      attachSelectionPopup(el, rendered, fullText, onElaborate, onAskAbout);
-    }
-  }
+  const finalise = (): Promise<void> =>
+    new Promise((resolve) => {
+      requestAnimationFrame(async () => {
+        el.empty();
+        await MarkdownRenderer.render(app, fullText, el, sourcePath, component);
+        if (role === 'assistant' && (onElaborate || onAskAbout)) {
+          attachSelectionPopup(el, el, fullText, onElaborate, onAskAbout);
+        }
+        resolve();
+      });
+    });
 
   return { el, appendChunk, finalise };
 }

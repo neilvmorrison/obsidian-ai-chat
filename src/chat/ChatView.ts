@@ -400,7 +400,8 @@ export class ChatView extends ItemView {
     this.resizeTextarea();
     this.removeEmptyState();
 
-    const userHandle = appendMessage(this.messageList, "user", this.app);
+    const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
+    const userHandle = appendMessage(this.messageList, "user", this.app, this, sourcePath);
     userHandle.appendChunk(text);
     await userHandle.finalise();
     this.scrollToBottom();
@@ -409,6 +410,8 @@ export class ChatView extends ItemView {
       this.messageList,
       "assistant",
       this.app,
+      this,
+      sourcePath,
       (selectedText, parentMessage) =>
         this.openElaborateView(selectedText, parentMessage, true),
       (selectedText, parentMessage) =>
@@ -429,10 +432,10 @@ export class ChatView extends ItemView {
       await this.activeSession.send(text, systemPrompt, (chunk) => {
         assistantHandle.appendChunk(chunk);
         this.smartScroll();
+      }, async () => {
+        await assistantHandle.finalise();
+        this.updateToolbar();
       });
-
-      await assistantHandle.finalise();
-      this.updateToolbar();
     } catch (err) {
       new Notice(
         `AI Chat error: ${err instanceof Error ? err.message : String(err)}`,
