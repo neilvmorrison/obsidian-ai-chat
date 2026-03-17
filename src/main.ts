@@ -3,6 +3,7 @@ import { OllamaChatSettings, OllamaChatSettingTab, DEFAULT_SETTINGS } from './se
 import { ChatView, CHAT_VIEW_TYPE } from './chat/ChatView';
 import { ElaborateView, ELABORATE_VIEW_TYPE, ElaborateOptions } from './chat/ElaborateView';
 import { registerCommands } from './commands/registerCommands';
+import { InlineGenerateSuggest } from './chat/InlineGenerateSuggest';
 
 export default class OllamaChatPlugin extends Plugin {
   settings!: OllamaChatSettings;
@@ -16,6 +17,9 @@ export default class OllamaChatPlugin extends Plugin {
 
     // Register commands, ribbon, context menu
     registerCommands(this);
+
+    // Inline /generate trigger in the editor
+    this.registerEditorSuggest(new InlineGenerateSuggest(this));
 
     // Settings tab
     this.addSettingTab(new OllamaChatSettingTab(this.app, this));

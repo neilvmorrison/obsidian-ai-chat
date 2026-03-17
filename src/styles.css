@@ -500,6 +500,28 @@
   justify-content: flex-end;
 }
 
+/* ---- Inline generate input ---- */
+.oac-inline-generate-input {
+  position: fixed;
+  z-index: 1000;
+  min-width: 200px;
+  padding: 0 var(--oac-space-2);
+  background: transparent;
+  border: none;
+  /* border-bottom: 1px solid var(--interactive-accent); */
+  color: var(--text-normal);
+  font-family: var(--font-text);
+  font-size: var(--font-text-size);
+  line-height: inherit;
+  outline: none;
+  /* caret-color: var(--interactive-accent); */
+  box-sizing: border-box;
+}
+
+.oac-inline-generate-input::placeholder {
+  color: var(--text-faint);
+}
+
 /* ---- Visibility utility ---- */
 .oac-hidden {
   display: none !important;
