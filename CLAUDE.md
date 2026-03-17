@@ -44,7 +44,6 @@ After completing any task that adds, removes or moves files, update the source m
 
 # What never to do:
 
-- use external CSS frameworks
 - make assumptions about critical tech-decisions
 - generate boilerplate or placeholder code (unless explicitly asked)
 

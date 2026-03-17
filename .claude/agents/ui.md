@@ -28,6 +28,7 @@ A function only appends to the container it was explicitly passed as an argument
 - CSS: .oac- prefix
 - DOM: createEl(), containerEl.querySelector()
 - never use external CSS frameworks
+- utilize shadcn/ui component css styling for our components where possible
 
 # File placement
 
