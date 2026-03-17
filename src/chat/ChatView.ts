@@ -19,7 +19,10 @@ interface Tab {
 class SaveOnCloseModal extends Modal {
   private resolve: (result: "save" | "discard" | "cancel") => void;
 
-  constructor(app: App, resolve: (result: "save" | "discard" | "cancel") => void) {
+  constructor(
+    app: App,
+    resolve: (result: "save" | "discard" | "cancel") => void,
+  ) {
     super(app);
     this.resolve = resolve;
   }
@@ -112,11 +115,19 @@ export class ChatView extends ItemView {
     root.empty();
     root.addClass("oac-chat-root");
 
+    // Close button (top-right corner)
+    const closeViewBtn = root.createEl("button", { cls: "oac-close-view-btn" });
+    setIcon(closeViewBtn, "x");
+    closeViewBtn.setAttribute("aria-label", "Close Chat");
+    closeViewBtn.addEventListener("click", () => this.leaf.detach());
+
     // Tab bar
     this.tabBar = root.createEl("div", { cls: "oac-tab-bar" });
     this.tabBar.style.display = "none";
     this.tabsRow = this.tabBar.createEl("div", { cls: "oac-tabs-row" });
-    const toolbarRight = this.tabBar.createEl("div", { cls: "oac-toolbar-right" });
+    const toolbarRight = this.tabBar.createEl("div", {
+      cls: "oac-toolbar-right",
+    });
 
     this.saveBtn = toolbarRight.createEl("button", {
       cls: "oac-icon-btn oac-save-btn",
@@ -140,7 +151,7 @@ export class ChatView extends ItemView {
     // No-tabs empty state (shown when all tabs are closed)
     this.noTabsStateEl = this.messageListContainer.createEl("div", {
       cls: "oac-empty-state oac-no-tabs-state",
-      text: "Let's Chat",
+      text: "Let's Chat!",
     });
     this.noTabsStateEl.style.display = "flex";
 
@@ -260,7 +271,7 @@ export class ChatView extends ItemView {
     messageListEl.style.display = "none";
     messageListEl.createEl("div", {
       cls: "oac-empty-state",
-      text: "Let's Chat",
+      text: "Let's Chat!",
     });
 
     const tab: Tab = {
@@ -283,7 +294,10 @@ export class ChatView extends ItemView {
     });
 
     messageListEl.addEventListener("scroll", () => {
-      if (this.tabs[this.activeTabIndex]?.messageListEl === messageListEl && this.isNearBottom(messageListEl)) {
+      if (
+        this.tabs[this.activeTabIndex]?.messageListEl === messageListEl &&
+        this.isNearBottom(messageListEl)
+      ) {
         this.hideScrollBtn();
       }
     });
@@ -360,8 +374,7 @@ export class ChatView extends ItemView {
   }
 
   private async fetchModels(): Promise<string[]> {
-    const tagsURL =
-      this.plugin.settings.baseURL.replace(/\/+$/, "") + "/tags";
+    const tagsURL = this.plugin.settings.baseURL.replace(/\/+$/, "") + "/tags";
     const response = await fetch(tagsURL);
     if (!response.ok) throw new Error("Failed to fetch models");
     const data = await response.json();
@@ -400,8 +413,14 @@ export class ChatView extends ItemView {
     this.resizeTextarea();
     this.removeEmptyState();
 
-    const sourcePath = this.app.workspace.getActiveFile()?.path ?? '';
-    const userHandle = appendMessage(this.messageList, "user", this.app, this, sourcePath);
+    const sourcePath = this.app.workspace.getActiveFile()?.path ?? "";
+    const userHandle = appendMessage(
+      this.messageList,
+      "user",
+      this.app,
+      this,
+      sourcePath,
+    );
     userHandle.appendChunk(text);
     await userHandle.finalise();
     this.scrollToBottom();
@@ -429,13 +448,18 @@ export class ChatView extends ItemView {
         .filter(Boolean)
         .join("\n\n");
 
-      await this.activeSession.send(text, systemPrompt, (chunk) => {
-        assistantHandle.appendChunk(chunk);
-        this.smartScroll();
-      }, async () => {
-        await assistantHandle.finalise();
-        this.updateToolbar();
-      });
+      await this.activeSession.send(
+        text,
+        systemPrompt,
+        (chunk) => {
+          assistantHandle.appendChunk(chunk);
+          this.smartScroll();
+        },
+        async () => {
+          await assistantHandle.finalise();
+          this.updateToolbar();
+        },
+      );
     } catch (err) {
       new Notice(
         `AI Chat error: ${err instanceof Error ? err.message : String(err)}`,

@@ -10,9 +10,39 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  position: relative;
   background: var(--background-primary);
   color: var(--text-normal);
   font-size: var(--font-text-size);
+}
+
+/* ---- Close view button ---- */
+.oac-close-view-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.oac-close-view-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.oac-close-view-btn svg {
+  width: 13px;
+  height: 13px;
 }
 
 /* ---- Tab bar (toolbar row) ---- */
