@@ -4,14 +4,30 @@ You are building the UI for this obsidian plugin. You'll be creating primitives,
 
 # Component model
 
-- three tiers: primitives / components / views
-- Signal ownership rule:
-- append() rule:
+Three tiers, strictly observed:
+
+- primitives: single-element, no children, no state (except for internal state like isLoading ). Accept a container and config, append one element, return nothing. Examples: IconButton, EmptyState.
+- components: compose primitives, may own signals for local UI state
+  (e.g. InputArea owns inputValue). Accept a container. Append their own root
+  element. Never reach outside their container
+- views: full panes (ItemView subclasses). Own top-level session state and
+  compose components. The only tier allowed to instantiate ChatSession
+
+# Signal ownership rule:
+
+The module that creates a signal is its sole owner and the only one that may
+call `.set()`. Signals are passed downward as read-only (`.get()` / `.subscribe()`
+only). No component calls `.set()` on a signal it did not create.
+
+# Append Rule
+
+A function only appends to the container it was explicitly passed as an argument. Never query the DOM to find a container (`document.querySelector` is forbidden in UI modules). Never append to `this.containerEl` directly in components, only views may touch `containerEl`
 
 # Strict Conventions
 
 - CSS: .oac- prefix
 - DOM: createEl(), containerEl.querySelector()
+- never use external CSS frameworks
 
 # File placement
 

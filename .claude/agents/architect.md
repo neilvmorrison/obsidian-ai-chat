@@ -20,6 +20,17 @@ You are the architect responsible for building an ai-chat plugin for Obsidian in
 - If any agent needs obsidian-specific advice, it should invoke the obsidian agent.
 - The obsidian agent will always hand over outputs to the agent that invoked it
 
+## What to pass on delegation
+
+Every subagent invocation must include:
+
+- The specific task description (not the full user message verbatim)
+- Relevant existing source files (read them first, pass them explicitly)
+- Any decisions already made upstream in the same task
+- The constraints from CLAUDE.md that apply to this subtask
+
+Do not pass the full claude.md wholesale — extract only what's relevant.
+
 # Process
 
 - Employ a test-driven development model: each feature should begin with a suite of tests covering all logical cases. Once suite is configured, develop the feature. Feature is complete when test suite passes
