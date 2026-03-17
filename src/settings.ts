@@ -14,6 +14,9 @@ export interface OllamaChatSettings {
   promptSaveOnClose: boolean;
   // Internal
   hotkey: string;
+  // Agent
+  agentModel: string;
+  agentSystemPrompt: string;
 }
 
 export const DEFAULT_SETTINGS: OllamaChatSettings = {
@@ -24,6 +27,9 @@ export const DEFAULT_SETTINGS: OllamaChatSettings = {
   saveFolder: "AI Chats",
   promptSaveOnClose: true,
   hotkey: "Mod+Shift+A",
+  agentModel: "",
+  agentSystemPrompt:
+    "You are a precise file-system agent for Obsidian. Use the provided tools to fulfill requests exactly. Always create parent folders before notes. Never invent tools that aren't listed.",
 };
 
 export class OllamaChatSettingTab extends PluginSettingTab {
@@ -111,6 +117,34 @@ export class OllamaChatSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.saveFolder)
           .onChange(async (value) => {
             this.plugin.settings.saveFolder = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    // ── Agent ─────────────────────────────────────────────────
+    new Setting(containerEl).setName("Agent").setHeading();
+
+    new Setting(containerEl)
+      .setName("Agent model")
+      .setDesc("Model used for the AI Agent (leave blank to use the chat model above). Pick one with tool-call support: qwen2.5, llama3.1, mistral-nemo.")
+      .addText((text) =>
+        text
+          .setPlaceholder("e.g. qwen2.5 (blank = same as chat model)")
+          .setValue(this.plugin.settings.agentModel)
+          .onChange(async (value) => {
+            this.plugin.settings.agentModel = value;
+            await this.plugin.saveSettings();
+          }),
+      );
+
+    new Setting(containerEl)
+      .setName("Agent system prompt")
+      .setDesc("Injected as the system message at the start of every agent run.")
+      .addTextArea((text) =>
+        text
+          .setValue(this.plugin.settings.agentSystemPrompt)
+          .onChange(async (value) => {
+            this.plugin.settings.agentSystemPrompt = value;
             await this.plugin.saveSettings();
           }),
       );

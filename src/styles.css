@@ -614,3 +614,52 @@
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
+
+/* ── Agent modal ──────────────────────────────────────────── */
+.oac-agent-modal-desc {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.oac-agent-modal-input {
+  width: 100%;
+}
+
+/* ── Tool confirm modal ───────────────────────────────────── */
+.oac-confirm-card {
+  background: var(--background-secondary);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.oac-confirm-tool-name {
+  font-weight: 600;
+  font-size: 1em;
+  color: var(--text-accent);
+  margin: 0 0 10px;
+  font-family: var(--font-monospace);
+}
+
+.oac-confirm-params {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88em;
+}
+
+.oac-confirm-param-key {
+  color: var(--text-muted);
+  padding: 3px 12px 3px 0;
+  vertical-align: top;
+  white-space: nowrap;
+  font-family: var(--font-monospace);
+}
+
+.oac-confirm-param-val {
+  color: var(--text-normal);
+  padding: 3px 0;
+  word-break: break-word;
+  max-width: 340px;
+  font-family: var(--font-monospace);
+  white-space: pre-wrap;
+}
