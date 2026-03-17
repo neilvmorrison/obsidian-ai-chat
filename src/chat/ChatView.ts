@@ -99,7 +99,7 @@ export class ChatView extends ItemView {
   }
 
   getIcon(): string {
-    return "message-square";
+    return "bot-message-square";
   }
 
   private get messageList(): HTMLElement {
@@ -119,7 +119,9 @@ export class ChatView extends ItemView {
     const closeViewBtn = root.createEl("button", { cls: "oac-close-view-btn" });
     setIcon(closeViewBtn, "x");
     closeViewBtn.setAttribute("aria-label", "Close Chat");
-    closeViewBtn.addEventListener("click", () => this.leaf.detach());
+    closeViewBtn.addEventListener("click", () => {
+      (this.app.workspace as any).rightSplit?.collapse();
+    });
 
     // Tab bar
     this.tabBar = root.createEl("div", { cls: "oac-tab-bar" });

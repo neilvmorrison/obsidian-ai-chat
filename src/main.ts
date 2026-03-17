@@ -19,10 +19,16 @@ export default class OllamaChatPlugin extends Plugin {
 
     // Settings tab
     this.addSettingTab(new OllamaChatSettingTab(this.app, this));
+
+    // Persist the chat leaf in the right sidebar across sessions
+    this.app.workspace.onLayoutReady(async () => {
+      if (this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE).length === 0) {
+        await this.app.workspace.getRightLeaf(false)?.setViewState({ type: CHAT_VIEW_TYPE });
+      }
+    });
   }
 
   onunload(): void {
-    this.app.workspace.detachLeavesOfType(CHAT_VIEW_TYPE);
     this.app.workspace.detachLeavesOfType(ELABORATE_VIEW_TYPE);
   }
 
@@ -34,8 +40,21 @@ export default class OllamaChatPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  async openChatView(prefillText?: string): Promise<void> {
+  async openChatView(prefillText?: string, toggle = false): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE);
+
+    if (toggle && existing.length > 0) {
+      const rightSplit = (this.app.workspace as any).rightSplit;
+      // If already active, collapse the sidebar (toggle off)
+      if (this.app.workspace.getActiveViewOfType(ChatView) != null) {
+        rightSplit?.collapse();
+        return;
+      }
+      // Expand if collapsed, then reveal
+      rightSplit?.expand();
+      this.app.workspace.revealLeaf(existing[0]);
+      return;
+    }
 
     let leaf: WorkspaceLeaf;
     if (existing.length > 0) {

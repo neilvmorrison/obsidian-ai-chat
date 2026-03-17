@@ -3,7 +3,7 @@ import { summarizeNote } from './summarizeNote';
 
 export function registerCommands(plugin: OllamaChatPlugin): void {
   // Ribbon icon
-  plugin.addRibbonIcon('message-square', 'Open AI Chat', () => {
+  plugin.addRibbonIcon('bot-message-square', 'Open AI Chat', () => {
     plugin.openChatView();
   });
 
@@ -13,7 +13,7 @@ export function registerCommands(plugin: OllamaChatPlugin): void {
     name: 'Open AI Chat',
     hotkeys: [{ modifiers: ['Mod', 'Shift'], key: 'A' }],
     callback: () => {
-      plugin.openChatView();
+      plugin.openChatView(undefined, true);
     },
   });
 

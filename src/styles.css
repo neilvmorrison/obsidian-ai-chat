@@ -55,6 +55,7 @@
   flex-shrink: 0;
   background: transparent;
   min-height: 36px;
+  margin-top: 32px;
 }
 
 .oac-tabs-row {
