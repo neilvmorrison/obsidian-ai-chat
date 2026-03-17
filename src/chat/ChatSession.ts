@@ -12,8 +12,9 @@ export class ChatSession {
   private abortController: AbortController | null = null;
   private settings: OllamaChatSettings;
 
-  constructor(settings: OllamaChatSettings) {
+  constructor(settings: OllamaChatSettings, initialMessages: Message[] = []) {
     this.settings = settings;
+    this.messages = [...initialMessages];
   }
 
   abort(): void {

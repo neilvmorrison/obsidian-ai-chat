@@ -1,7 +1,9 @@
 import { ItemView, WorkspaceLeaf, Notice, Modal, App, setIcon } from "obsidian";
 import type OllamaChatPlugin from "../main";
-import { ChatSession } from "./ChatSession";
+import { ChatSession, type Message } from "./ChatSession";
 import { appendMessage } from "./renderMessage";
+import { createOllama } from "ollama-ai-provider";
+import { streamText } from "ai";
 import { buildContext } from "../context/buildContext";
 import {
   createInputArea,
@@ -25,6 +27,7 @@ interface Tab {
   session: ChatSession;
   messageListEl: HTMLElement;
   tabEl: HTMLButtonElement;
+  saveEl: HTMLElement;
   closeEl: HTMLButtonElement;
   emptyState: EmptyStateHandle;
 }
@@ -137,7 +140,6 @@ export class ChatView extends ItemView {
 
     // Tab bar
     this.tabBarHandle = createTabBar(root, {
-      onSave: () => this.handleSave(),
       onNewChat: () => this.createTab(),
     });
 
@@ -186,15 +188,22 @@ export class ChatView extends ItemView {
     this.tabs.forEach((t) => t.session.abort());
   }
 
-  private createTab(): void {
+  private createTab(priorMessages?: Message[]): void {
     const tabIndex = this.tabs.length;
-    const session = new ChatSession(this.plugin.settings);
+    const session = new ChatSession(this.plugin.settings, priorMessages);
 
     const tabEl = this.tabBarHandle.tabsRow.createEl("button", { cls: "oac-tab" }) as HTMLButtonElement;
     tabEl.createEl("span", {
       text: `Chat ${tabIndex + 1}`,
       cls: "oac-tab-label",
     });
+    const { el: saveEl } = createIconButton(tabEl, {
+      icon: "save",
+      label: "Save as Note",
+      cls: ["oac-icon-btn", "oac-tab-save-btn"],
+      onClick: () => this.handleSave(),
+    });
+    saveEl.addClass("oac-hidden");
     const closeEl = tabEl.createEl("button", {
       cls: "oac-tab-close",
       text: "×",
@@ -206,6 +215,13 @@ export class ChatView extends ItemView {
     messageListEl.addClass("oac-hidden");
 
     const emptyState = createEmptyState(messageListEl, { text: "Let's Chat!" });
+
+    if (priorMessages && priorMessages.length > 0) {
+      messageListEl.createEl("div", {
+        cls: "oac-context-banner",
+        text: `↑ Continued from previous chat (${priorMessages.length} messages)`,
+      });
+    }
 
     messageListEl.addEventListener("scroll", () => {
       if (this.tabs[this.activeTabIndex]?.messageListEl === messageListEl) {
@@ -220,13 +236,16 @@ export class ChatView extends ItemView {
       session,
       messageListEl,
       tabEl,
+      saveEl,
       closeEl,
       emptyState,
     };
     this.tabs.push(tab);
 
     tabEl.addEventListener("click", (e) => {
-      if ((e.target as HTMLElement).classList.contains("oac-tab-close")) return;
+      const target = e.target as HTMLElement;
+      if (target.classList.contains("oac-tab-close")) return;
+      if (target.closest(".oac-tab-save-btn")) return;
       this.switchToTab(this.tabs.indexOf(tab));
     });
 
@@ -273,7 +292,6 @@ export class ChatView extends ItemView {
       this.activeTabIndex = 0;
       this.noTabsEmptyState.show();
       this.tabBarHandle.setVisible(false);
-      this.tabBarHandle.setSaveVisible(false);
       this.tabBarHandle.setNewChatVisible(false);
     } else {
       const nextIndex = Math.min(index, this.tabs.length - 1);
@@ -288,8 +306,17 @@ export class ChatView extends ItemView {
     const hasTabs = this.tabs.length > 0;
     const hasContent = hasTabs && this.activeSession.messages.length > 0;
     this.tabBarHandle.setVisible(hasTabs);
-    this.tabBarHandle.setSaveVisible(hasContent);
     this.tabBarHandle.setNewChatVisible(hasContent);
+    // Show save only on the active tab when it has content
+    this.tabs.forEach((t, i) => {
+      const isActive = i === this.activeTabIndex;
+      const tabHasContent = t.session.messages.length > 0;
+      if (isActive && tabHasContent) {
+        t.saveEl.removeClass("oac-hidden");
+      } else {
+        t.saveEl.addClass("oac-hidden");
+      }
+    });
   }
 
   private updateCloseButtons(): void {
@@ -338,10 +365,8 @@ export class ChatView extends ItemView {
       this.app,
       this,
       sourcePath,
-      (selectedText, parentMessage) =>
-        this.openElaborateView(selectedText, parentMessage, true),
-      (selectedText, parentMessage) =>
-        this.openElaborateView(selectedText, parentMessage, false),
+      (selectedText) => this.handleOpenInNewChat(selectedText),
+      (selectedText, fullText) => this.handleLookup(selectedText, fullText),
     );
     this.scrollToBottom();
     this.isStreaming = true;
@@ -435,19 +460,62 @@ export class ChatView extends ItemView {
     await this.saveTabSession(this.tabs[this.activeTabIndex]);
   }
 
-  private openElaborateView(
-    selectedText: string,
-    parentMessage: string,
-    autoSend: boolean,
-  ): void {
-    const prefill = autoSend
-      ? `Please elaborate on the following:\n\n${selectedText}`
-      : `Regarding: ${selectedText}\n\n`;
+  private handleOpenInNewChat(selectedText: string): void {
+    this.createTab(this.activeSession.messages.slice());
+    this.inputArea.textarea.value = selectedText;
+    this.inputArea.resizeTextarea();
+    this.inputArea.textarea.focus();
+  }
 
-    this.plugin.openElaborateView({
-      prefillText: prefill,
-      systemContext: parentMessage,
-      autoSend,
-    });
+  private async handleLookup(selectedText: string, fullText: string): Promise<void> {
+    const modal = new LookupModal(this.app);
+    modal.open();
+
+    const abortController = new AbortController();
+    modal.onClose = () => abortController.abort();
+
+    try {
+      const ollama = createOllama({ baseURL: this.plugin.settings.baseURL });
+      const result = streamText({
+        model: ollama(this.plugin.settings.model),
+        messages: [{
+          role: 'user',
+          content: `Write a 2-3 paragraph explanation or summary of the following, using the surrounding context to inform your answer.\n\nSelected text: "${selectedText}"\n\nFull context: "${fullText}"`,
+        }],
+        abortSignal: abortController.signal,
+      });
+      for await (const chunk of result.textStream) {
+        modal.appendChunk(chunk);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        modal.setError(err.message);
+      }
+    }
+  }
+}
+
+class LookupModal extends Modal {
+  private contentDiv!: HTMLElement;
+  private text = '';
+
+  onOpen(): void {
+    this.titleEl.setText('Look up');
+    this.contentEl.addClass('oac-lookup-modal');
+    this.contentDiv = this.contentEl.createEl('div', { cls: 'oac-lookup-modal-content' });
+    this.contentDiv.textContent = 'Loading…';
+  }
+
+  appendChunk(chunk: string): void {
+    this.text += chunk;
+    this.contentDiv.textContent = this.text;
+  }
+
+  setError(msg: string): void {
+    this.contentDiv.textContent = `Error: ${msg}`;
+  }
+
+  onClose(): void {
+    this.contentEl.empty();
   }
 }

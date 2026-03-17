@@ -1,4 +1,4 @@
-import { App, MarkdownRenderer, Component } from 'obsidian';
+import { App, MarkdownRenderer, Component, Menu } from 'obsidian';
 
 export interface MessageHandle {
   el: HTMLElement;
@@ -7,7 +7,8 @@ export interface MessageHandle {
   destroy: () => void;
 }
 
-export type SelectionHandler = (selectedText: string, parentMessage: string) => void;
+export type OpenInNewChatHandler = (selectedText: string) => void;
+export type LookupHandler = (selectedText: string, fullText: string) => void;
 
 export function appendMessage(
   container: HTMLElement,
@@ -15,8 +16,8 @@ export function appendMessage(
   app: App,
   component: Component,
   sourcePath: string,
-  onElaborate?: SelectionHandler,
-  onAskAbout?: SelectionHandler
+  onOpenNewChat?: OpenInNewChatHandler,
+  onLookup?: LookupHandler
 ): MessageHandle {
   const el = container.createEl('div', {
     cls: `oac-message oac-message--${role} oac-message-rendered markdown-rendered`,
@@ -30,15 +31,15 @@ export function appendMessage(
     pre.textContent = fullText;
   }
 
-  let cleanupPopup: (() => void) | null = null;
+  let cleanupMenu: (() => void) | null = null;
 
   const finalise = (): Promise<void> =>
     new Promise((resolve) => {
       requestAnimationFrame(async () => {
         el.empty();
         await MarkdownRenderer.render(app, fullText, el, sourcePath, component);
-        if (role === 'assistant' && (onElaborate || onAskAbout)) {
-          cleanupPopup = attachSelectionPopup(el, el, fullText, onElaborate, onAskAbout);
+        if (role === 'assistant' && (onOpenNewChat || onLookup)) {
+          cleanupMenu = attachContextMenu(el, fullText, onOpenNewChat, onLookup);
         }
         resolve();
       });
@@ -48,87 +49,52 @@ export function appendMessage(
     el,
     appendChunk,
     finalise,
-    destroy: () => { cleanupPopup?.(); cleanupPopup = null; },
+    destroy: () => { cleanupMenu?.(); cleanupMenu = null; },
   };
 }
 
-function attachSelectionPopup(
-  messageEl: HTMLElement,
+function attachContextMenu(
   contentEl: HTMLElement,
   fullText: string,
-  onElaborate?: SelectionHandler,
-  onAskAbout?: SelectionHandler
+  onOpenNewChat?: OpenInNewChatHandler,
+  onLookup?: LookupHandler
 ): () => void {
-  let popup: HTMLElement | null = null;
+  function onContextMenu(e: MouseEvent): void {
+    const selection = window.getSelection();
+    const selectedText = selection?.toString().trim();
+    if (!selectedText) return;
 
-  function removePopup(): void {
-    popup?.remove();
-    popup = null;
-  }
+    const range = selection?.getRangeAt(0);
+    if (!range || !contentEl.contains(range.commonAncestorContainer)) return;
 
-  contentEl.addEventListener('mouseup', (e: MouseEvent) => {
-    setTimeout(() => {
-      const selection = window.getSelection();
-      const selectedText = selection?.toString().trim();
-      if (!selectedText) {
-        removePopup();
-        return;
-      }
+    e.preventDefault();
 
-      removePopup();
+    const menu = new Menu();
 
-      const range = selection?.getRangeAt(0);
-      if (!range) return;
-
-      const rect = range.getBoundingClientRect();
-      const containerRect = messageEl.getBoundingClientRect();
-
-      popup = document.createEl('div', { cls: 'oac-selection-popup' });
-
-      if (onElaborate) {
-        const elaborateBtn = popup.createEl('button', {
-          cls: 'oac-selection-btn',
-          text: 'Elaborate',
-        });
-        elaborateBtn.addEventListener('click', () => {
-          removePopup();
-          onElaborate(selectedText, fullText);
-        });
-      }
-
-      if (onAskAbout) {
-        const askBtn = popup.createEl('button', {
-          cls: 'oac-selection-btn',
-          text: 'Ask about this',
-        });
-        askBtn.addEventListener('click', () => {
-          removePopup();
-          onAskAbout(selectedText, fullText);
-        });
-      }
-
-      const top = rect.top - containerRect.top - (popup.offsetHeight || 32) - 4;
-      const left = rect.left - containerRect.left;
-
-      popup.style.top = `${top}px`;
-      popup.style.left = `${left}px`;
-
-      messageEl.style.position = 'relative';
-      messageEl.appendChild(popup);
-
-      e.stopPropagation();
-    }, 10);
-  });
-
-  function onDocMousedown(e: MouseEvent): void {
-    if (popup && !popup.contains(e.target as Node)) {
-      removePopup();
+    if (onOpenNewChat) {
+      menu.addItem((item) =>
+        item
+          .setTitle('Open in new chat')
+          .setIcon('message-square')
+          .onClick(() => onOpenNewChat(selectedText))
+      );
     }
+
+    if (onLookup) {
+      menu.addItem((item) =>
+        item
+          .setTitle('Look up')
+          .setIcon('search')
+          .onClick(() => onLookup(selectedText, fullText))
+      );
+    }
+
+    menu.showAtMouseEvent(e);
   }
-  document.addEventListener('mousedown', onDocMousedown);
+
+  contentEl.addEventListener('contextmenu', onContextMenu);
 
   return () => {
-    document.removeEventListener('mousedown', onDocMousedown);
-    removePopup();
+    contentEl.removeEventListener('contextmenu', onContextMenu);
   };
 }

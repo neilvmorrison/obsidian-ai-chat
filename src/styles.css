@@ -115,13 +115,6 @@
   height: 0;
 }
 
-.oac-toolbar-right {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--oac-space-1);
-  flex-shrink: 0;
-}
 
 /* ---- Tabs ---- */
 .oac-tab {
@@ -184,6 +177,12 @@
 .oac-tab-close:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
+}
+
+.oac-tab-save-btn {
+  width: var(--oac-space-8);
+  height: var(--oac-space-8);
+  flex-shrink: 0;
 }
 
 /* ---- Icon buttons (save, new chat, upload) ---- */
@@ -283,6 +282,9 @@
   border-radius: var(--oac-radius-lg);
   word-break: break-word;
   position: relative;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 
 .oac-message--user {
@@ -357,34 +359,11 @@
   font-size: var(--oac-font-base);
 }
 
-/* ---- Selection popup ---- */
-.oac-selection-popup {
-  position: absolute;
-  z-index: 100;
-  display: flex;
-  gap: var(--oac-space-2);
-  background: var(--background-primary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--oac-radius-md);
-  padding: var(--oac-space-1) var(--oac-space-2);
-  box-shadow: 0 2px var(--oac-space-4) rgba(0, 0, 0, 0.25);
-}
-
-.oac-selection-btn {
-  padding: var(--oac-space-1) var(--oac-space-4);
-  font-size: var(--oac-font-sm);
-  border-radius: var(--oac-radius-sm);
-  border: 1px solid var(--background-modifier-border);
-  background: transparent;
-  color: var(--text-normal);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.oac-selection-btn:hover {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border-color: var(--interactive-accent);
+/* ---- Lookup modal ---- */
+.oac-lookup-modal-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
 }
 
 /* ---- Scroll-to-bottom button ---- */
@@ -662,4 +641,29 @@
   max-width: 340px;
   font-family: var(--font-monospace);
   white-space: pre-wrap;
+}
+
+/* Suppress Obsidian callout styling inside chat messages */
+.oac-message-rendered .callout {
+  background: none;
+  border-left: 2px solid var(--text-muted);
+  border-radius: 0;
+  padding: var(--oac-space-4) var(--oac-space-8);
+  color: var(--text-normal);
+}
+.oac-message-rendered .callout-title {
+  display: none;
+}
+.oac-message-rendered .callout-content {
+  padding: 0;
+}
+
+/* Context-carry banner shown in new chat tabs opened from prior chats */
+.oac-context-banner {
+  font-size: var(--oac-font-xs);
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--oac-space-4) 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin-bottom: var(--oac-space-4);
 }
