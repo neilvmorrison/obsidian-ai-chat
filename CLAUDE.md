@@ -6,30 +6,26 @@ This is an AI-Chat integration plugin for Obsidian
 
 ```
 src/
-├── main.ts                      # Plugin entrypoint, view registration, settings persistence
-├── settings.ts                  # OllamaChatSettings interface + settings tab UI
-├── styles.css                   # Global styles (.oac- prefix)
-├── chat/
-│   ├── ChatView.ts              # Main chat pane (ItemView), multi-tab, model select
-│   ├── ChatSession.ts           # Session state, streaming, title gen, markdown serialization
-│   ├── ElaborateView.ts         # Focused single-prompt view with auto-send
-│   ├── renderMessage.ts         # Chunk -> <pre>, finalize via MarkdownRenderer
-│   ├── AgentSession.ts          # Tool-call agent loop, confirmation callback
-│   └── InlineGenerateSuggest.ts # /generate editor suggest, inline streaming
-├── ui/
-│   ├── index.ts                 # Barrel export
-│   ├── InputArea.ts             # Auto-resize textarea, send/abort actions
-│   ├── MessageList.ts           # Scrollable message container + scroll-to-bottom
-│   ├── TabBar.ts                # Tab row, new-chat button
-│   ├── StreamingControls.ts     # Send/abort buttons + loading state
-│   ├── ModelSelect.ts           # Ollama model dropdown
-│   ├── IconButton.ts            # Reusable icon button
-│   └── EmptyState.ts            # Empty tab placeholder
-├── commands/
-│   ├── registerCommands.ts      # Ribbon, command palette, editor context menu
-│   └── summarizeNote.ts         # Summarize active note -> ElaborateView
-└── context/
-    └── buildContext.ts          # File metadata, cursor-relative context window
+├── main.ts                      # Plugin entrypoint (stub — Phase 1 scaffold)
+├── settings.ts                  # DEFAULT_SETTINGS constant and OllamaChatSettingTab
+├── types/
+│   └── settings.ts              # OllamaChatSettings interface
+├── context/
+│   └── buildContext.ts          # buildContext(), extractEditorContext(), extractTags()
+└── ui/
+    └── signals.ts               # signal<T>() and computed<T>() reactive primitives
+
+__tests__/
+├── settings.test.ts             # Unit tests for settings.ts
+├── context/
+│   └── buildContext.test.ts     # Unit tests for buildContext.ts
+└── ui/
+    └── signals.test.ts          # Unit tests for signals.ts
+
+__mocks__/
+└── obsidian.ts                  # Minimal runtime stub (aliased by vitest.config.ts)
+
+vitest.config.ts                 # Aliases obsidian → __mocks__/obsidian.ts
 ```
 
 # Code Priorities

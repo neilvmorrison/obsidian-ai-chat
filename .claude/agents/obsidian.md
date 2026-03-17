@@ -78,3 +78,26 @@ When given a task, you always reason about the Obsidian-specific constraints/con
   method is current, say so rather than guessing.
 - Prefer Obsidian-native solutions (e.g. `MarkdownRenderer`, `Modal`,
   `Notice`) over custom implementations where the native version is adequate.
+
+## Prototype findings (undocumented quirks)
+
+### requestUrl vs fetch
+- Use `requestUrl` (from `obsidian`) for all outbound HTTP calls (e.g. Ollama API). Raw `fetch()` can fail in Obsidian's Electron sandbox due to CORS restrictions. The prototype's `ModelSelect` used raw `fetch` for the `/tags` endpoint — this is a known bug to avoid in the rewrite.
+
+### Private workspace APIs
+- `(app.workspace as any).rightSplit?.collapse()` and `.expand()` are used to toggle the right sidebar. These are undocumented private APIs; flag their use explicitly and isolate them to `main.ts` so they're easy to swap out.
+
+### CodeMirror internal access
+- `InlineGenerateSuggest` accesses `(editor as any).cm` to get the CodeMirror 6 view and call `cm.coordsAtPos(offset)` for absolute screen coordinates. This is an Obsidian internal and may break across versions. Isolate this access to a single helper function.
+
+### MarkdownRenderer timing
+- `MarkdownRenderer.render()` must be called inside `requestAnimationFrame` (or after the element is attached to the live DOM). The prototype wraps the call in a `new Promise(resolve => requestAnimationFrame(async () => { ... resolve(); }))` pattern. Without this, syntax highlighting and other post-processors silently fail.
+
+### EditorSuggest context
+- In `EditorSuggest.selectSuggestion`, `this.context` can be null if the suggest was dismissed before selection fires. Always guard with `if (!ctx) return`.
+
+### ElaborateView pending options
+- `ElaborateView.applyOptions()` may be called before `onOpen()` has run (when the leaf is first created). The prototype stores opts in `this.pendingOptions` and applies them in `onOpen`. This pattern must be preserved.
+
+### AgentSession uses Ollama native API
+- `AgentSession` bypasses `ai`/`ollama-ai-provider` and calls the Ollama `/chat` endpoint directly via `requestUrl` with `stream: false`. This is required for tool-call support, which the streaming `ai` SDK abstraction does not expose cleanly with Ollama. Keep these two code paths separate.
