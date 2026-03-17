@@ -101,3 +101,16 @@ When given a task, you always reason about the Obsidian-specific constraints/con
 
 ### AgentSession uses Ollama native API
 - `AgentSession` bypasses `ai`/`ollama-ai-provider` and calls the Ollama `/chat` endpoint directly via `requestUrl` with `stream: false`. This is required for tool-call support, which the streaming `ai` SDK abstraction does not expose cleanly with Ollama. Keep these two code paths separate.
+
+### Settings persistence
+- `plugin.loadData()` / `plugin.saveData()` are the only sanctioned persistence APIs. `loadData()` returns `Promise<unknown>` — always validate/migrate the result before casting to a typed interface.
+- Deep-merge loaded settings with defaults using `Object.assign({}, DEFAULT_SETTINGS, loaded)` or equivalent. Without this, new fields added in later versions are undefined for existing users.
+
+### Setting API — password fields
+- There is no `addPassword` method on `Setting`. The community pattern is `addText` then mutate `text.inputEl.type = 'password'`. Guard the `inputEl` access (`if (text.inputEl)`) so unit tests with minimal mocks don't throw.
+
+### Setting API — addDropdown
+- `DropdownComponent` exposes `addOption(value, label)`, `setValue(value)`, `onChange(cb)`. There is no `addOptions` bulk method in older API versions; add options one at a time for compatibility.
+
+### Modal pattern
+- `Modal.onOpen()` / `onClose()` are the lifecycle hooks for building/tearing down modal DOM. Build into `this.contentEl`, not `this.containerEl`. Call `contentEl.empty()` at the start of `onOpen()` to support re-use.

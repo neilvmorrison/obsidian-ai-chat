@@ -7,9 +7,9 @@ This is an AI-Chat integration plugin for Obsidian
 ```
 src/
 ├── main.ts                      # Plugin entrypoint (stub — Phase 1 scaffold)
-├── settings.ts                  # DEFAULT_SETTINGS constant and OllamaChatSettingTab
+├── settings.ts                  # PROVIDER_PRESETS, DEFAULT_SETTINGS, migrate(), SettingsStore, AIChatSettingTab, AddProviderModal
 ├── types/
-│   └── settings.ts              # OllamaChatSettings interface
+│   └── settings.ts              # ProviderType, ProviderSettings, AIChatSettings interfaces
 ├── context/
 │   └── buildContext.ts          # buildContext(), extractEditorContext(), extractTags()
 └── ui/
