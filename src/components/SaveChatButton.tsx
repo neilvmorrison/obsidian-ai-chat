@@ -33,7 +33,7 @@ export function SaveChatButton({ messages, model }: SaveChatButtonProps) {
     <Button
       variant="ghost"
       size="icon"
-      className="chat:absolute chat:top-2 chat:right-2 chat:z-10 chat:h-8 chat:w-8"
+      className="chat:h-5 chat:w-5 chat:p-0 chat:ml-1"
       onClick={handleSave}
       disabled={state === "saving"}
       title="Save chat"

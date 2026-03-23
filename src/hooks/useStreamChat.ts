@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useState, useRef, useCallback, useEffect } from "react";
 import { streamText } from "ai";
 import { ollama, OLLAMA_BASE_URL, DEFAULT_MODEL } from "@/lib/ollama";
+
+export { DEFAULT_MODEL };
 
 export interface ChatMessage {
   id: string;
@@ -9,15 +11,16 @@ export interface ChatMessage {
 }
 
 export interface UseStreamChatOptions {
-  initialMessages?: ChatMessage[];
-  initialModel?: string;
+  messages: ChatMessage[];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  input: string;
+  setInput: (value: string) => void;
+  model: string;
+  setModel: (value: string) => void;
 }
 
-export function useStreamChat(options?: UseStreamChatOptions) {
-  const [messages, setMessages] = useState<ChatMessage[]>(options?.initialMessages ?? []);
-  const [input, setInput] = useState("");
+export function useStreamChat({ messages, setMessages, input, setInput, model, setModel }: UseStreamChatOptions) {
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModelState] = useState(options?.initialModel ?? DEFAULT_MODEL);
   const [availableModels, setAvailableModels] = useState<string[]>([DEFAULT_MODEL]);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -38,16 +41,16 @@ export function useStreamChat(options?: UseStreamChatOptions) {
     fetchModels();
   }, []);
 
-  const setModel = useCallback((newModel: string) => {
+  const changeModel = useCallback((newModel: string) => {
     if (newModel === model) return;
-    setModelState(newModel);
+    setModel(newModel);
     const systemMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "system",
       content: `Model changed to ${newModel}`,
     };
     setMessages((prev) => [...prev, systemMsg]);
-  }, [model]);
+  }, [model, setModel, setMessages]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -139,7 +142,7 @@ export function useStreamChat(options?: UseStreamChatOptions) {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [input, isLoading, messages, model]);
+  }, [input, isLoading, messages, model, setMessages, setInput]);
 
-  return { messages, input, setInput, handleSubmit, isLoading, stop, model, setModel, availableModels };
+  return { handleSubmit, isLoading, stop, changeModel, availableModels };
 }

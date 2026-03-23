@@ -105,6 +105,19 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 
+.oac-tab-bar__scroll {
+  flex: 1;
+  overflow-x: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--oac-space-2);
+  scrollbar-width: none;
+}
+
+.oac-tab-bar__scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .oac-tab-bar__tab {
   display: inline-flex;
   align-items: center;
@@ -130,6 +143,12 @@
   background: var(--background-secondary);
   color: var(--text-normal);
   border-color: var(--background-modifier-border);
+}
+
+.oac-tab-bar__save {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--oac-space-1);
 }
 
 /* ── Model select (inside input-area footer) ──────────────── */
