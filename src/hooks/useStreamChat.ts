@@ -1,23 +1,53 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { ollama, OLLAMA_BASE_URL, DEFAULT_MODEL } from "@/lib/ollama";
 
 export interface ChatMessage {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string;
 }
 
-const ollama = createOpenAI({
-  baseURL: "http://localhost:11434/v1",
-  apiKey: "ollama",
-});
+export interface UseStreamChatOptions {
+  initialMessages?: ChatMessage[];
+  initialModel?: string;
+}
 
-export function useStreamChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+export function useStreamChat(options?: UseStreamChatOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>(options?.initialMessages ?? []);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [model, setModelState] = useState(options?.initialModel ?? DEFAULT_MODEL);
+  const [availableModels, setAvailableModels] = useState<string[]>([DEFAULT_MODEL]);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Fetch available models from Ollama
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const res = await fetch(`${OLLAMA_BASE_URL}/api/tags`);
+        const data = await res.json();
+        const models: string[] = data.models?.map((m: { name: string }) => m.name) ?? [];
+        if (models.length > 0) {
+          setAvailableModels(models);
+        }
+      } catch {
+        // Ollama not reachable — keep default
+      }
+    }
+    fetchModels();
+  }, []);
+
+  const setModel = useCallback((newModel: string) => {
+    if (newModel === model) return;
+    setModelState(newModel);
+    const systemMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "system",
+      content: `Model changed to ${newModel}`,
+    };
+    setMessages((prev) => [...prev, systemMsg]);
+  }, [model]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -49,8 +79,10 @@ export function useStreamChat() {
 
     try {
       const result = streamText({
-        model: ollama("llama3.2:latest"),
-        messages: history.map((m) => ({ role: m.role, content: m.content })),
+        model: ollama(model),
+        messages: history
+          .filter((m) => m.role !== "system")
+          .map((m) => ({ role: m.role, content: m.content })),
         abortSignal: controller.signal,
       });
 
@@ -107,7 +139,7 @@ export function useStreamChat() {
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [input, isLoading, messages]);
+  }, [input, isLoading, messages, model]);
 
-  return { messages, input, setInput, handleSubmit, isLoading, stop };
+  return { messages, input, setInput, handleSubmit, isLoading, stop, model, setModel, availableModels };
 }

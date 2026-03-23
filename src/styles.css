@@ -478,6 +478,29 @@
   overflow-x: auto;
 }
 
+/* ── System messages (model change indicator) ────────────── */
+.oac-system-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--oac-space-4);
+  padding: var(--oac-space-2) 0;
+}
+
+.oac-system-message::before,
+.oac-system-message::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--background-modifier-border);
+}
+
+.oac-system-message__text {
+  font-size: var(--oac-font-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 /* ── Typing indicator ────────────────────────────────────── */
 .oac-typing-indicator {
   display: flex;
@@ -521,4 +544,37 @@
 
 .oac-message li {
   margin-bottom: var(--oac-space-2);
+}
+
+/* ── "Open in Chat" button on saved chat notes ───────────── */
+.oac-open-in-chat-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--oac-radius-md);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: var(--oac-font-xs);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.oac-open-in-chat-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── Chat note readonly: hide the data block in preview ──── */
+.obsidian-chat-note .markdown-preview-view pre:last-child {
+  display: none;
+}
+
+/* ── Chat note: position the view container for the button ─ */
+.obsidian-chat-note .markdown-preview-view {
+  position: relative;
 }

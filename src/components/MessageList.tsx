@@ -36,18 +36,24 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
 
   return (
     <div ref={listRef} className="oac-message-list">
-      {messages.map((msg) => (
-        <div
-          key={msg.id}
-          className={`oac-message oac-message--${msg.role}`}
-        >
-          {msg.role === "user" ? (
-            msg.content
-          ) : (
-            <MarkdownMessage content={msg.content} />
-          )}
-        </div>
-      ))}
+      {messages.map((msg) =>
+        msg.role === "system" ? (
+          <div key={msg.id} className="oac-system-message">
+            <span className="oac-system-message__text">{msg.content}</span>
+          </div>
+        ) : (
+          <div
+            key={msg.id}
+            className={`oac-message oac-message--${msg.role}`}
+          >
+            {msg.role === "user" ? (
+              msg.content
+            ) : (
+              <MarkdownMessage content={msg.content} />
+            )}
+          </div>
+        )
+      )}
       {isLoading && messages[messages.length - 1]?.content === "" && (
         <div className="oac-typing-indicator">
           <span />

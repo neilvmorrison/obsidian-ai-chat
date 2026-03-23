@@ -3,6 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ModelSelector } from "@/components/ModelSelector";
 
 interface PromptInputProps {
   value: string;
@@ -11,6 +12,9 @@ interface PromptInputProps {
   onStop?: () => void;
   isLoading?: boolean;
   placeholder?: string;
+  model: string;
+  onModelChange: (model: string) => void;
+  availableModels: string[];
 }
 
 export function PromptInput({
@@ -20,6 +24,9 @@ export function PromptInput({
   onStop,
   isLoading = false,
   placeholder = "Ask anything...",
+  model,
+  onModelChange,
+  availableModels,
 }: PromptInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -44,7 +51,7 @@ export function PromptInput({
     <div className="chat:border-t chat:border-border chat:bg-background chat:p-3">
       <div
         className={cn(
-          "chat:relative chat:flex chat:items-end chat:gap-2",
+          "chat:relative chat:flex chat:flex-col chat:gap-1",
           "chat:rounded-lg chat:border chat:border-border chat:bg-muted/50",
           "chat:p-2 chat:pr-12",
         )}
@@ -64,6 +71,13 @@ export function PromptInput({
             "focus-visible:chat:ring-0",
           )}
         />
+        <div className="chat:flex chat:items-center">
+          <ModelSelector
+            model={model}
+            onModelChange={onModelChange}
+            availableModels={availableModels}
+          />
+        </div>
         <div className="chat:absolute chat:bottom-2 chat:right-2">
           {isLoading ? (
             <Button
