@@ -1,5 +1,7 @@
 @import "tailwindcss/theme" prefix(chat);
 @import "tailwindcss/utilities" prefix(chat);
+@import "katex/dist/katex.min.css";
+@import "highlight.js/styles/github.css";
 
 /* ============================================================
    Theme: Map shadcn/ui tokens → Obsidian CSS custom properties
@@ -400,4 +402,123 @@
 /* ── Visibility utility ───────────────────────────────────── */
 .oac-hidden {
   display: none !important;
+}
+
+/* ── Code blocks ─────────────────────────────────────────── */
+.oac-code-block {
+  background: var(--background-primary);
+  padding: var(--oac-space-4);
+  border-radius: var(--oac-radius-sm);
+  overflow-x: auto;
+  margin: var(--oac-space-4) 0;
+  font-size: var(--oac-font-base);
+}
+
+.oac-code-block:last-child {
+  margin-bottom: 0;
+}
+
+.oac-inline-code {
+  background: var(--background-primary);
+  padding: var(--oac-space-1) var(--oac-space-2);
+  border-radius: var(--oac-radius-sm);
+  font-size: var(--oac-font-base);
+}
+
+/* ── Tables inside messages ──────────────────────────────── */
+.oac-message table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--oac-space-4) 0;
+  font-size: var(--oac-font-base);
+}
+
+.oac-message table:last-child {
+  margin-bottom: 0;
+}
+
+.oac-message th,
+.oac-message td {
+  border: 1px solid var(--background-modifier-border);
+  padding: var(--oac-space-3) var(--oac-space-4);
+  text-align: left;
+}
+
+.oac-message th {
+  background: var(--background-primary);
+  font-weight: 600;
+}
+
+.oac-message tr:nth-child(even) td {
+  background: var(--background-primary-alt, var(--background-primary));
+}
+
+/* ── Mermaid diagrams ────────────────────────────────────── */
+.oac-mermaid {
+  margin: var(--oac-space-4) 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.oac-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.oac-mermaid-loading {
+  padding: var(--oac-space-4);
+  color: var(--text-muted);
+  font-size: var(--oac-font-sm);
+  font-style: italic;
+}
+
+/* ── KaTeX display math ──────────────────────────────────── */
+.oac-message .katex-display {
+  margin: var(--oac-space-4) 0;
+  overflow-x: auto;
+}
+
+/* ── Typing indicator ────────────────────────────────────── */
+.oac-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: var(--oac-space-4) var(--oac-space-6);
+  align-self: flex-start;
+}
+
+.oac-typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: oac-bounce 1.4s ease-in-out infinite;
+}
+
+.oac-typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.oac-typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes oac-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* ── Highlight.js theme override for dark mode ───────────── */
+.theme-dark .hljs {
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+/* ── List styling inside messages ────────────────────────── */
+.oac-message ul,
+.oac-message ol {
+  padding-left: 1.5em;
+}
+
+.oac-message li {
+  margin-bottom: var(--oac-space-2);
 }
