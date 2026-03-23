@@ -106,13 +106,13 @@ function makePlugin(overrides: Partial<AIChatSettings> = {}) {
 
 describe('DEFAULT_SETTINGS', () => {
   // model moved to providers.ollama.model in v1 schema
-  it('has providers.ollama.model "llama3"', () => {
-    expect(DEFAULT_SETTINGS.providers.ollama.model).toBe('llama3');
+  it('has providers.ollama.model "llama3.2"', () => {
+    expect(DEFAULT_SETTINGS.providers.ollama.model).toBe('llama3.2');
   });
 
-  // baseURL moved to providers.ollama.baseUrl; /api suffix stripped; URL → Url
-  it('has providers.ollama.baseUrl "http://localhost:11434" (no /api suffix)', () => {
-    expect(DEFAULT_SETTINGS.providers.ollama.baseUrl).toBe('http://localhost:11434');
+  // baseURL moved to providers.ollama.baseUrl; uses OpenAI-compat /v1 path
+  it('has providers.ollama.baseUrl "http://localhost:11434/v1"', () => {
+    expect(DEFAULT_SETTINGS.providers.ollama.baseUrl).toBe('http://localhost:11434/v1');
   });
 
   it('has contextWindowLines 40', () => {
@@ -233,9 +233,9 @@ describe('migrate', () => {
     expect(result).toHaveProperty('agentSystemPrompt');
   });
 
-  it('prototype-era shape strips /api suffix from baseURL', () => {
+  it('prototype-era shape converts /api suffix to /v1 in baseURL', () => {
     const result = migrate({ baseURL: 'http://custom:11434/api', model: 'mistral' });
-    expect(result.providers.ollama.baseUrl).toBe('http://custom:11434');
+    expect(result.providers.ollama.baseUrl).toBe('http://custom:11434/v1');
     expect(result.providers.ollama.model).toBe('mistral');
   });
 
@@ -321,7 +321,7 @@ describe('SettingsStore', () => {
     };
     const store = new SettingsStore(plugin);
     const result = await store.load();
-    expect(result.providers.ollama.baseUrl).toBe('http://custom:11434');
+    expect(result.providers.ollama.baseUrl).toBe('http://custom:11434/v1');
     expect(result.providers.ollama.model).toBe('mistral');
   });
 

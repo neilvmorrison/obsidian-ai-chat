@@ -1,6 +1,9 @@
 import esbuild from 'esbuild';
+import { copyFileSync } from 'fs';
+
 const prod = process.argv[2] === 'production';
-esbuild.build({
+
+await esbuild.build({
   entryPoints: ['src/main.ts'],
   bundle: true,
   external: ['obsidian', 'electron', '@codemirror/*', '@lezer/*'],
@@ -11,3 +14,5 @@ esbuild.build({
   minify: prod,
   outfile: 'main.js',
 });
+
+copyFileSync('src/styles.css', 'styles.css');

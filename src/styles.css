@@ -1,0 +1,346 @@
+/* ============================================================
+   OAC — styles.css
+   All selectors prefixed .oac- to avoid collisions.
+   Only Obsidian CSS variables are used for colours/spacing.
+   ============================================================ */
+
+/* ── Layout tokens ────────────────────────────────────────── */
+:root {
+  --oac-space-1: 2px;
+  --oac-space-2: 4px;
+  --oac-space-3: 6px;
+  --oac-space-4: 8px;
+  --oac-space-5: 10px;
+  --oac-space-6: 12px;
+  --oac-space-8: 16px;
+  --oac-space-10: 20px;
+
+  --oac-radius-sm: 3px;
+  --oac-radius-md: 5px;
+  --oac-radius-lg: 8px;
+
+  --oac-icon-btn-size: 26px;
+  --oac-icon-size: 14px;
+  --oac-tab-bar-height: 36px;
+
+  --oac-font-xs: 0.82em;
+  --oac-font-sm: 0.78em;
+  --oac-font-base: 0.9em;
+}
+
+/* ── Focus reset ──────────────────────────────────────────── */
+[class^="oac-"]:focus,
+[class*=" oac-"]:focus {
+  outline: none;
+}
+
+/* ── View containers ──────────────────────────────────────── */
+.oac-chat-view,
+.oac-elaborate-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-text-size);
+}
+
+/* ── Tab bar ──────────────────────────────────────────────── */
+.oac-tab-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--oac-space-2);
+  padding: var(--oac-space-2) var(--oac-space-4);
+  flex-shrink: 0;
+  min-height: var(--oac-tab-bar-height);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.oac-tab-bar__tab {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--oac-space-1) var(--oac-space-5);
+  border-radius: var(--oac-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--oac-font-xs);
+  white-space: nowrap;
+  transition: background 0.1s, color 0.1s;
+}
+
+.oac-tab-bar__tab:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.oac-tab-bar__tab--active {
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border-color: var(--background-modifier-border);
+}
+
+/* ── Model select (inside input-area footer) ──────────────── */
+.oac-model-select {
+  font-size: var(--oac-font-xs);
+  padding: var(--oac-space-1) var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  max-width: 180px;
+}
+
+/* ── Primitives: select ───────────────────────────────────── */
+.oac-select {
+  font-size: var(--oac-font-xs);
+  padding: var(--oac-space-1) var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  max-width: 200px;
+}
+
+.oac-select:hover {
+  color: var(--text-normal);
+}
+
+/* ── Message list ─────────────────────────────────────────── */
+.oac-message-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--oac-space-5);
+  padding: var(--oac-space-6) var(--oac-space-5);
+  scroll-behavior: smooth;
+}
+
+/* ── Individual messages ──────────────────────────────────── */
+.oac-message {
+  max-width: 85%;
+  padding: var(--oac-space-4) var(--oac-space-6);
+  border-radius: var(--oac-radius-lg);
+  word-break: break-word;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.oac-message--user {
+  align-self: flex-end;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-bottom-right-radius: var(--oac-space-1);
+}
+
+.oac-message--assistant {
+  align-self: flex-start;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border-bottom-left-radius: var(--oac-space-1);
+}
+
+/* Streaming pre node */
+.oac-message pre {
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Rendered markdown inside assistant bubble */
+.oac-message p,
+.oac-message ul,
+.oac-message ol,
+.oac-message blockquote,
+.oac-message h1,
+.oac-message h2,
+.oac-message h3,
+.oac-message h4,
+.oac-message h5,
+.oac-message h6,
+.oac-message pre {
+  margin-top: 0;
+  margin-bottom: var(--oac-space-4);
+}
+
+.oac-message p:last-child,
+.oac-message ul:last-child,
+.oac-message ol:last-child,
+.oac-message blockquote:last-child,
+.oac-message h1:last-child,
+.oac-message h2:last-child,
+.oac-message h3:last-child,
+.oac-message h4:last-child,
+.oac-message h5:last-child,
+.oac-message h6:last-child,
+.oac-message pre:last-child {
+  margin-bottom: 0;
+}
+
+.oac-message pre {
+  background: var(--background-primary);
+  padding: var(--oac-space-4);
+  border-radius: var(--oac-radius-sm);
+  overflow-x: auto;
+}
+
+.oac-message code {
+  background: var(--background-primary);
+  padding: var(--oac-space-1) var(--oac-space-2);
+  border-radius: var(--oac-radius-sm);
+  font-size: var(--oac-font-base);
+}
+
+/* Callout suppression inside chat bubbles */
+.oac-message .callout {
+  background: none;
+  border-left: 2px solid var(--text-muted);
+  border-radius: 0;
+  padding: var(--oac-space-4) var(--oac-space-8);
+  color: var(--text-normal);
+}
+
+.oac-message .callout-title {
+  display: none;
+}
+
+.oac-message .callout-content {
+  padding: 0;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.oac-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--oac-space-8);
+  color: var(--text-faint);
+  font-size: var(--oac-font-base);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Input area ───────────────────────────────────────────── */
+.oac-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--oac-space-2);
+  padding: var(--oac-space-4) var(--oac-space-5);
+  border-top: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  background: var(--background-secondary);
+  margin: 0 var(--oac-space-5) var(--oac-space-5);
+  border-radius: var(--oac-radius-lg);
+}
+
+.oac-input-area__row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--oac-space-6);
+  align-items: flex-end;
+}
+
+.oac-input-area__row .oac-textarea {
+  flex: 1;
+}
+
+.oac-input-area__footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* ── Primitives: textarea ─────────────────────────────────── */
+.oac-textarea {
+  width: 100%;
+  min-width: 0;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: var(--font-text-size);
+  line-height: 1.4;
+  max-height: calc(1.4em * 6 + var(--oac-space-6));
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.oac-textarea:focus {
+  outline: none;
+}
+
+.oac-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Primitives: input ────────────────────────────────────── */
+.oac-input {
+  width: 100%;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--oac-radius-sm);
+  padding: var(--oac-space-3) var(--oac-space-4);
+  font-size: var(--font-text-size);
+  font-family: inherit;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.oac-input:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+}
+
+.oac-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Primitives: icon button ──────────────────────────────── */
+.oac-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--oac-icon-btn-size);
+  height: var(--oac-icon-btn-size);
+  padding: 0;
+  border-radius: var(--oac-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.oac-icon-button:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  border-color: var(--background-modifier-border);
+}
+
+.oac-icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.oac-icon-button svg {
+  width: var(--oac-icon-size);
+  height: var(--oac-icon-size);
+}
+
+/* ── Visibility utility ───────────────────────────────────── */
+.oac-hidden {
+  display: none !important;
+}

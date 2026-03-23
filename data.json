@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "defaultProviderId": "ollama",
+  "providers": {
+    "ollama": {
+      "id": "ollama",
+      "name": "Ollama",
+      "type": "openai-compat",
+      "baseUrl": "http://localhost:11434/v1",
+      "apiKey": "",
+      "model": "llama3.2",
+      "enabled": true
+    },
+    "lmstudio": {
+      "id": "lmstudio",
+      "name": "LM Studio",
+      "type": "openai-compat",
+      "baseUrl": "http://localhost:1234/v1",
+      "apiKey": "",
+      "model": "local-model",
+      "enabled": false
+    },
+    "openai": {
+      "id": "openai",
+      "name": "OpenAI",
+      "type": "openai-compat",
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "",
+      "model": "gpt-4o",
+      "enabled": false
+    },
+    "openrouter": {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "type": "openai-compat",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "",
+      "model": "openai/gpt-4o",
+      "enabled": false
+    },
+    "anthropic": {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "type": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "apiKey": "",
+      "model": "claude-sonnet-4-5",
+      "enabled": false
+    },
+    "gemini": {
+      "id": "gemini",
+      "name": "Gemini",
+      "type": "gemini",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "apiKey": "",
+      "model": "gemini-2.0-flash",
+      "enabled": false
+    }
+  },
+  "contextWindowLines": 40,
+  "systemPromptPrefix": "You are a helpful assistant embedded in Obsidian.",
+  "saveFolder": "AI Chats",
+  "promptSaveOnClose": true,
+  "hotkey": "Mod+Shift+A",
+  "agentProviderId": "ollama",
+  "agentModel": "",
+  "agentSystemPrompt": "You are a precise file-system agent. Complete tasks using only the tools provided."
+}
