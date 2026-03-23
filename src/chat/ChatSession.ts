@@ -87,7 +87,6 @@ export class ChatSession {
     let aborted = false;
 
     try {
-      console.log("streamtext try");
       const result = streamText({
         model: this._model,
         system: this._settings.systemPromptPrefix,
@@ -97,7 +96,6 @@ export class ChatSession {
         >[0]["messages"],
         abortSignal: this._abortController.signal,
       });
-      console.log({ result });
       for await (const chunk of result.textStream) {
         // Check abort at the top of each iteration — this ensures that a
         // synchronous abort() call is honoured before any chunk is processed.
