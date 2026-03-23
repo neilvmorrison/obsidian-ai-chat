@@ -1,0 +1,91 @@
+import { useRef, type KeyboardEvent } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ArrowUp, Square } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface PromptInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  onStop?: () => void;
+  isLoading?: boolean;
+  placeholder?: string;
+}
+
+export function PromptInput({
+  value,
+  onChange,
+  onSubmit,
+  onStop,
+  isLoading = false,
+  placeholder = "Ask anything...",
+}: PromptInputProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      if (value.trim() && !isLoading) {
+        onSubmit();
+      }
+    }
+  };
+
+  const handleInput = () => {
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    }
+  };
+
+  return (
+    <div className="chat:border-t chat:border-border chat:bg-background chat:p-3">
+      <div
+        className={cn(
+          "chat:relative chat:flex chat:items-end chat:gap-2",
+          "chat:rounded-lg chat:border chat:border-border chat:bg-muted/50",
+          "chat:p-2 chat:pr-12"
+        )}
+      >
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          placeholder={placeholder}
+          rows={1}
+          className={cn(
+            "chat:min-h-[36px] chat:max-h-[200px] chat:resize-none",
+            "chat:border-0 chat:bg-transparent chat:shadow-none",
+            "chat:p-1 chat:text-sm",
+            "focus-visible:chat:ring-0"
+          )}
+        />
+        <div className="chat:absolute chat:bottom-2 chat:right-2">
+          {isLoading ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onStop}
+              className="chat:h-8 chat:w-8 chat:rounded-full"
+            >
+              <Square className="chat:h-4 chat:w-4 chat:fill-current" />
+            </Button>
+          ) : (
+            <Button
+              size="icon"
+              onClick={onSubmit}
+              disabled={!value.trim()}
+              className="chat:h-8 chat:w-8 chat:rounded-full"
+            >
+              <ArrowUp className="chat:h-4 chat:w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
