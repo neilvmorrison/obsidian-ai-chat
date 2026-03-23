@@ -10,7 +10,13 @@ src/
 ├── styles.css                   # Plugin stylesheet: .oac- prefixed selectors, Obsidian CSS variables only
 ├── settings.ts                  # PROVIDER_PRESETS, DEFAULT_SETTINGS, migrate(), SettingsStore, AIChatSettingTab, AddProviderModal
 ├── types/
-│   └── settings.ts              # ProviderType, ProviderSettings, AIChatSettings interfaces
+│   ├── settings.ts              # ProviderType, ProviderSettings, AIChatSettings interfaces
+│   └── Chat.ts                  # Chat, ChatMessage interfaces; createChat(), addMessageToChat(), isValidChat()
+├── storage/
+│   ├── ChatManager.ts           # High-level chat persistence orchestrator: create, open, continue, save, delete
+│   ├── ChatStorageAdapter.ts    # Low-level JSON file I/O for chat data with atomic writes
+│   ├── SnapshotGenerator.ts     # Generates read-only markdown snapshots in vault /Chats folder
+│   └── TitleGenerator.ts        # LLM-powered 3-5 word chat title generation with fallback
 ├── providers/
 │   ├── buildModel.ts            # buildModel(): maps ProviderSettings → AI SDK LanguageModel (ollama/openai-compat/anthropic/gemini)
 │   └── ollamaClient.ts          # fetchOllamaModels(): fetches locally downloaded model names from GET /api/tags
@@ -32,19 +38,27 @@ src/
         │   ├── EmptyState.ts    # emptyState(): single <div> for no-content placeholder
         │   ├── Input.ts         # input(): single <input> with onChange callback
         │   ├── Textarea.ts      # textarea(): single <textarea> with onChange callback
-        │   └── Select.ts        # select(): single <select> with options and onChange callback
+        │   ├── Select.ts        # select(): single <select> with options and onChange callback
+        │   └── Logo.ts          # logo(): placeholder logo component
         ├── InputArea.ts         # inputArea(): row-flex textarea + send/stop toggle + optional upload button + model-select footer
         ├── MessageList.ts       # messageList(): smart node-tracking renderer; user=text, assistant=<pre>→MarkdownRenderer; timestamps
         ├── StreamingControls.ts # streamingControls(): stop button visible only while streaming (standalone, unused by ChatView/ElaborateView)
         ├── ModelSelect.ts       # modelSelect(): <select> synced to a ReadonlySignal<string> (standalone, unused by ChatView)
         ├── TabBar.ts            # tabBar(): tab buttons; owns activeTab signal
         └── views/
-            ├── ChatView.ts      # ChatView: ItemView subclass; tab counter, Chat (N) title, model select in inputArea footer
+            ├── ChatView.ts      # ChatView: ItemView subclass; tab counter, Chat (N) title, model select, save button, Cmd/Ctrl+S
             └── ElaborateView.ts # ElaborateView: ItemView subclass; applyOptions() pattern, autoSend support
 
 __tests__/
 ├── main.test.ts                 # Unit tests for main.ts (lifecycle: onload/onunload)
 ├── settings.test.ts             # Unit tests for settings.ts
+├── types/
+│   └── Chat.test.ts             # Unit tests for Chat types and helpers
+├── storage/
+│   ├── ChatManager.test.ts      # Unit tests for ChatManager orchestration
+│   ├── ChatStorageAdapter.test.ts # Unit tests for JSON file I/O adapter
+│   ├── SnapshotGenerator.test.ts  # Unit tests for markdown snapshot generation
+│   └── TitleGenerator.test.ts   # Unit tests for LLM title generation
 ├── providers/
 │   ├── buildModel.test.ts       # Unit tests for buildModel.ts
 │   └── ollamaClient.test.ts     # Unit tests for ollamaClient.ts

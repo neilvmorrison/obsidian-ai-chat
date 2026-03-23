@@ -70,10 +70,17 @@ const mockSettings: AIChatSettings = {
 const mockModel = {};
 const mockBuildModel = vi.fn().mockReturnValue(mockModel);
 
+const mockChatManager = {
+  createNewChat: vi.fn().mockResolvedValue({ id: 'test-chat-id', title: 'Untitled Chat', created: '', modified: '', messages: [] }),
+  continueChat: vi.fn().mockResolvedValue({ id: 'test-chat-id', title: 'Generated Title', created: '', modified: '', messages: [] }),
+  initializeStorage: vi.fn().mockResolvedValue(undefined),
+};
+
 function makeView(): ChatView {
   return new ChatView(new WorkspaceLeaf(), {
     settings: mockSettings,
     buildModel: mockBuildModel,
+    chatManager: mockChatManager as any,
   });
 }
 

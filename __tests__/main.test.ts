@@ -3,10 +3,18 @@ import { CHAT_VIEW_TYPE } from '../src/ui/components/views/ChatView';
 import { ELABORATE_VIEW_TYPE } from '../src/ui/components/views/ElaborateView';
 import { DEFAULT_SETTINGS } from '../src/settings';
 
+// Mock ChatManager
+vi.mock('../src/storage/ChatManager', () => ({
+  ChatManager: vi.fn().mockImplementation(() => ({
+    initializeStorage: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 // Mock obsidian — must cover everything imported transitively by main.ts
 vi.mock('obsidian', () => {
   class Plugin {
     app: any;
+    manifest = { dir: '.obsidian/plugins/ai-chat-plugin', id: 'ai-chat-plugin' };
     constructor(app?: any, _manifest?: any) {
       this.app = app ?? {};
     }
@@ -63,6 +71,17 @@ vi.mock('obsidian', () => {
     path = ''; name = '';
   }
   class App {
+    vault = {
+      adapter: {
+        exists: vi.fn().mockResolvedValue(false),
+        mkdir: vi.fn().mockResolvedValue(undefined),
+        read: vi.fn().mockResolvedValue(''),
+        write: vi.fn().mockResolvedValue(undefined),
+        rename: vi.fn().mockResolvedValue(undefined),
+        remove: vi.fn().mockResolvedValue(undefined),
+        list: vi.fn().mockResolvedValue({ files: [], folders: [] }),
+      },
+    };
     workspace = {
       getLeavesOfType: vi.fn().mockReturnValue([]),
       getRightLeaf: vi.fn().mockReturnValue(null),
@@ -106,9 +125,18 @@ vi.mock('@ai-sdk/google', () => ({ createGoogleGenerativeAI: vi.fn() }));
 
 import AIChatPlugin from '../src/main';
 import { registerCommands } from '../src/commands/registerCommands';
+import { ChatManager } from '../src/storage/ChatManager';
+
+const mockChatManager = vi.mocked(ChatManager);
 
 function makeApp() {
   return {
+    vault: {
+      adapter: {
+        exists: vi.fn().mockResolvedValue(false),
+        mkdir: vi.fn().mockResolvedValue(undefined),
+      },
+    },
     workspace: {
       getLeavesOfType: vi.fn().mockReturnValue([]),
       getRightLeaf: vi.fn().mockReturnValue(null),

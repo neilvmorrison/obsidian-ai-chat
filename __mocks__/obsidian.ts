@@ -44,12 +44,16 @@ export class ItemView {
   getViewType(): string { return ''; }
   getDisplayText(): string { return ''; }
   getIcon(): string { return ''; }
+  addAction(_icon: string, _title: string, _callback: () => void): HTMLElement {
+    return makeObsidianEl('button');
+  }
   async onOpen(): Promise<void> {}
   async onClose(): Promise<void> {}
 }
 
 export class Plugin {
   app: App = new App();
+  manifest = { dir: '.obsidian/plugins/ai-chat-plugin', id: 'ai-chat-plugin' };
   registerView(_type: string, _creator: unknown): void {}
   addRibbonIcon(_icon: string, _title: string, _cb: () => void): HTMLElement { return makeObsidianEl(); }
   addSettingTab(_tab: unknown): void {}
@@ -119,6 +123,18 @@ export class TFile {
 }
 
 export class App {
+  vault = {
+    adapter: {
+      exists: (_path: string): Promise<boolean> => Promise.resolve(false),
+      mkdir: (_path: string): Promise<void> => Promise.resolve(),
+      read: (_path: string): Promise<string> => Promise.resolve(''),
+      write: (_path: string, _data: string): Promise<void> => Promise.resolve(),
+      rename: (_from: string, _to: string): Promise<void> => Promise.resolve(),
+      remove: (_path: string): Promise<void> => Promise.resolve(),
+      list: (_path: string): Promise<{ files: string[]; folders: string[] }> =>
+        Promise.resolve({ files: [], folders: [] }),
+    },
+  };
   workspace = {
     getLeavesOfType: (_type: string): WorkspaceLeaf[] => [],
     getRightLeaf: (_newLeaf: boolean): WorkspaceLeaf | null => new WorkspaceLeaf(),
