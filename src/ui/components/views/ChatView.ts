@@ -96,7 +96,12 @@ export class ChatView extends ItemView {
     (content as any).empty();
     content.classList.add('oac-chat-view');
 
-    messageList(content, { messages: this.session.messages });
+    messageList(content, {
+      messages: this.session.messages,
+      app: this.app,
+      component: this,
+      sourcePath: '',
+    });
 
     const prefill = this.prefillText;
     this.prefillText = undefined;

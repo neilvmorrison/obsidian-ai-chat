@@ -114,7 +114,7 @@ describe('ChatSession', () => {
 
       await session.send('hello');
 
-      expect(session.messages.get()[0]).toEqual({ role: 'user', content: 'hello' });
+      expect(session.messages.get()[0]).toMatchObject({ role: 'user', content: 'hello' });
     });
 
     it('updates assistant message signal once per chunk', async () => {
@@ -128,8 +128,9 @@ describe('ChatSession', () => {
 
       await session.send('hi');
 
-      // subscribe fires immediately with '' placeholder, then once per chunk
-      expect(updates).toEqual(['', 'Hello', 'Hello, ', 'Hello, world!']);
+      // subscribe fires immediately with '' placeholder, then once per chunk,
+      // then once more when the streaming flag is cleared on finalization
+      expect(updates).toEqual(['', 'Hello', 'Hello, ', 'Hello, world!', 'Hello, world!']);
     });
 
     it('sets streamingState to streaming during send', async () => {
@@ -203,10 +204,10 @@ describe('ChatSession', () => {
 
       const msgs = session.messages.get();
       expect(msgs).toHaveLength(4);
-      expect(msgs[0]).toEqual({ role: 'user',      content: 'first'           });
-      expect(msgs[1]).toEqual({ role: 'assistant', content: 'First response'  });
-      expect(msgs[2]).toEqual({ role: 'user',      content: 'second'          });
-      expect(msgs[3]).toEqual({ role: 'assistant', content: 'Second response' });
+      expect(msgs[0]).toMatchObject({ role: 'user',      content: 'first'           });
+      expect(msgs[1]).toMatchObject({ role: 'assistant', content: 'First response'  });
+      expect(msgs[2]).toMatchObject({ role: 'user',      content: 'second'          });
+      expect(msgs[3]).toMatchObject({ role: 'assistant', content: 'Second response' });
     });
 
     it('passes system prompt and message history to streamText', async () => {
@@ -217,7 +218,7 @@ describe('ChatSession', () => {
       expect(mockStreamText).toHaveBeenCalledWith(
         expect.objectContaining({
           system: 'You are helpful.',
-          messages: [{ role: 'user', content: 'hello' }],
+          messages: [expect.objectContaining({ role: 'user', content: 'hello' })],
         }),
       );
     });

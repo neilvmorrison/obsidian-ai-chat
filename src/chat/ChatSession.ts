@@ -10,6 +10,10 @@ export type Role = "user" | "assistant";
 export interface Message {
   role: Role;
   content: string;
+  /** Unix timestamp (ms) when the message was created. */
+  timestamp: number;
+  /** True only while the assistant message is actively streaming. */
+  streaming?: boolean;
 }
 
 /** Current streaming state of the session. */
@@ -76,9 +80,12 @@ export class ChatSession {
     // Add user message and an empty assistant placeholder before streaming starts.
     this._messages.set((prev) => [
       ...prev,
-      { role: "user", content: userContent },
+      { role: "user", content: userContent, timestamp: Date.now() },
     ]);
-    this._messages.set((prev) => [...prev, { role: "assistant", content: "" }]);
+    this._messages.set((prev) => [
+      ...prev,
+      { role: "assistant", content: "", streaming: true, timestamp: Date.now() },
+    ]);
     this._streamingState.set("streaming");
     this._error.set(null);
 
@@ -90,8 +97,8 @@ export class ChatSession {
       const result = streamText({
         model: this._model,
         system: this._settings.systemPromptPrefix,
-        // Slice off the placeholder so we don't echo it back to the API.
-        messages: this._messages.get().slice(0, -1) as Parameters<
+        // Slice off the placeholder, and strip internal fields before sending.
+        messages: this._messages.get().slice(0, -1).map(({ role, content }) => ({ role, content })) as Parameters<
           typeof streamText
         >[0]["messages"],
         abortSignal: this._abortController.signal,
@@ -106,7 +113,8 @@ export class ChatSession {
         fullText += chunk;
         this._messages.set((prev) => {
           const msgs = [...prev];
-          msgs[msgs.length - 1] = { role: "assistant", content: fullText };
+          const last = msgs[msgs.length - 1];
+          msgs[msgs.length - 1] = { ...last, content: fullText, streaming: true };
           return msgs;
         });
       }
@@ -132,7 +140,8 @@ export class ChatSession {
         fullText += "\n\n_(aborted)_";
         this._messages.set((prev) => {
           const msgs = [...prev];
-          msgs[msgs.length - 1] = { role: "assistant", content: fullText };
+          const last = msgs[msgs.length - 1];
+          msgs[msgs.length - 1] = { role: "assistant", content: fullText, timestamp: last.timestamp };
           return msgs;
         });
         onComplete?.(fullText);
@@ -140,6 +149,13 @@ export class ChatSession {
         this._messages.set((prev) => prev.slice(0, -1)); // remove empty placeholder
       }
     } else {
+      // Finalize: remove streaming flag so MessageList can render markdown.
+      this._messages.set((prev) => {
+        const msgs = [...prev];
+        const last = msgs[msgs.length - 1];
+        msgs[msgs.length - 1] = { role: "assistant", content: fullText, timestamp: last.timestamp };
+        return msgs;
+      });
       onComplete?.(fullText);
     }
 

@@ -1,7 +1,8 @@
-import { setIcon } from 'obsidian';
-import { signal } from '../signals';
-import type { ReadonlySignal } from '../signals';
-import type { SelectOption } from './primitives/Select';
+import { setIcon } from "obsidian";
+import { signal } from "../signals";
+import type { ReadonlySignal } from "../signals";
+import type { SelectOption } from "./primitives/Select";
+import { iconButton } from "./primitives/IconButton";
 
 export interface InputAreaConfig {
   /** Placeholder text shown in the textarea when empty. */
@@ -20,6 +21,8 @@ export interface InputAreaConfig {
   selectedModel?: ReadonlySignal<string>;
   /** Called with the newly selected model value. */
   onModelChange?: (value: string) => void;
+  /** When provided, an upload button appears in the footer. Called with chosen files. */
+  onFilesChosen?: (files: File[]) => void;
 }
 
 /**
@@ -28,42 +31,46 @@ export interface InputAreaConfig {
  * When `modelOptions` is supplied, `.oac-input-area__footer` holds a model `<select>` at the left.
  * The send button is hidden while streaming; the stop button is shown instead.
  */
-export function inputArea(container: HTMLElement, config: InputAreaConfig): void {
-  const inputValue = signal(config.initialValue ?? '');
+export function inputArea(
+  container: HTMLElement,
+  config: InputAreaConfig,
+): void {
+  const inputValue = signal(config.initialValue ?? "");
 
-  const root = document.createElement('div');
-  root.className = 'oac-input-area';
+  const root = document.createElement("div");
+  root.className = "oac-input-area";
 
   // ── Row: textarea + action button ────────────────────────
-  const row = document.createElement('div');
-  row.className = 'oac-input-area__row';
+  const row = document.createElement("div");
+  row.className = "oac-input-area__row";
 
-  const ta = document.createElement('textarea');
-  ta.className = 'oac-textarea';
+  const ta = document.createElement("textarea");
+  ta.className = "oac-textarea";
+  ta.rows = 1;
   if (config.placeholder !== undefined) ta.placeholder = config.placeholder;
   if (config.initialValue !== undefined) ta.value = config.initialValue;
-  ta.addEventListener('input', () => inputValue.set(ta.value));
+  ta.addEventListener("input", () => inputValue.set(ta.value));
 
-  const sendBtn = document.createElement('button');
-  sendBtn.className = 'oac-icon-button';
-  sendBtn.setAttribute('aria-label', 'Send message');
-  setIcon(sendBtn, 'send');
-  sendBtn.addEventListener('click', () => {
+  const sendBtn = document.createElement("button");
+  sendBtn.className = "oac-icon-button";
+  sendBtn.setAttribute("aria-label", "Send message");
+  setIcon(sendBtn, "send");
+  sendBtn.addEventListener("click", () => {
     const val = inputValue.get().trim();
     if (!val) return;
     config.onSend(val);
-    inputValue.set('');
-    ta.value = '';
+    inputValue.set("");
+    ta.value = "";
   });
 
-  const stopBtn = document.createElement('button');
-  stopBtn.className = 'oac-icon-button';
-  stopBtn.setAttribute('aria-label', 'Stop streaming');
-  setIcon(stopBtn, 'square');
+  const stopBtn = document.createElement("button");
+  stopBtn.className = "oac-icon-button";
+  stopBtn.setAttribute("aria-label", "Stop streaming");
+  setIcon(stopBtn, "square");
   stopBtn.hidden = true;
-  stopBtn.addEventListener('click', config.onAbort);
+  stopBtn.addEventListener("click", config.onAbort);
 
-  config.isStreaming.subscribe(streaming => {
+  config.isStreaming.subscribe((streaming) => {
     sendBtn.hidden = streaming;
     stopBtn.hidden = !streaming;
   });
@@ -73,25 +80,50 @@ export function inputArea(container: HTMLElement, config: InputAreaConfig): void
   row.appendChild(stopBtn);
   root.appendChild(row);
 
-  // ── Footer: model select (optional) ──────────────────────
-  if (config.modelOptions && config.selectedModel && config.onModelChange) {
-    const footer = document.createElement('div');
-    footer.className = 'oac-input-area__footer';
+  // ── Footer: upload button + model select (both optional) ─
+  if (config.onFilesChosen || (config.modelOptions && config.selectedModel && config.onModelChange)) {
+    const footer = document.createElement("div");
+    footer.className = "oac-input-area__footer";
 
-    const sel = document.createElement('select');
-    sel.className = 'oac-select oac-model-select';
+    if (config.onFilesChosen) {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      fileInput.addEventListener("change", () => {
+        const files = Array.from(fileInput.files ?? []);
+        if (files.length > 0) config.onFilesChosen!(files);
+        fileInput.value = "";
+      });
+      footer.appendChild(fileInput);
 
-    for (const opt of config.modelOptions) {
-      const option = document.createElement('option');
-      option.value = opt.value;
-      option.textContent = opt.label;
-      sel.appendChild(option);
+      const uploadBtn = iconButton(footer, {
+        icon: "",
+        label: "Upload files",
+        onClick: () => fileInput.click(),
+      });
+      setIcon(uploadBtn, "upload");
     }
 
-    sel.addEventListener('change', () => config.onModelChange!(sel.value));
-    config.selectedModel.subscribe(val => { sel.value = val; });
+    if (config.modelOptions && config.selectedModel && config.onModelChange) {
+      const sel = document.createElement("select");
+      sel.className = "oac-select oac-model-select";
 
-    footer.appendChild(sel);
+      for (const opt of config.modelOptions) {
+        const option = document.createElement("option");
+        option.value = opt.value;
+        option.textContent = opt.label;
+        sel.appendChild(option);
+      }
+
+      sel.addEventListener("change", () => config.onModelChange!(sel.value));
+      config.selectedModel.subscribe((val) => {
+        sel.value = val;
+      });
+
+      footer.appendChild(sel);
+    }
+
     root.appendChild(footer);
   }
 

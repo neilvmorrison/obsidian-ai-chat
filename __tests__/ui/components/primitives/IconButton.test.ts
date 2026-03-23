@@ -54,4 +54,13 @@ describe('iconButton', () => {
 
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it('returns the created button element', () => {
+    const container = document.createElement('div');
+
+    const btn = iconButton(container, { icon: '✕', label: 'Close', onClick: vi.fn() });
+
+    expect(btn).toBe(container.children[0]);
+    expect(btn.tagName).toBe('BUTTON');
+  });
 });

@@ -69,7 +69,9 @@
   cursor: pointer;
   font-size: var(--oac-font-xs);
   white-space: nowrap;
-  transition: background 0.1s, color 0.1s;
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
 .oac-tab-bar__tab:hover {
@@ -217,6 +219,15 @@
   padding: 0;
 }
 
+/* ── Message timestamp ────────────────────────────────────── */
+.oac-message__timestamp {
+  display: block;
+  text-align: right;
+  font-size: var(--oac-font-sm);
+  margin-top: var(--oac-space-2);
+  opacity: 0.6;
+}
+
 /* ── Empty state ──────────────────────────────────────────── */
 .oac-empty-state {
   flex: 1;
@@ -249,6 +260,7 @@
   flex-direction: row;
   gap: var(--oac-space-6);
   align-items: flex-end;
+  margin-bottom: var(--oac-space-6);
 }
 
 .oac-input-area__row .oac-textarea {

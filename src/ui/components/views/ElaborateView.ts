@@ -96,7 +96,12 @@ export class ElaborateView extends ItemView {
     (content as any).empty();
     content.classList.add('oac-elaborate-view');
 
-    messageList(content, { messages: this.session.messages });
+    messageList(content, {
+      messages: this.session.messages,
+      app: this.app,
+      component: this,
+      sourcePath: '',
+    });
 
     const opts = this.pendingOptions;
     this.pendingOptions = null;

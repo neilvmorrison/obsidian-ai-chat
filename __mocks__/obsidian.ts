@@ -91,6 +91,20 @@ export function setIcon(el: HTMLElement, iconId: string): void {
   el.setAttribute('data-icon', iconId);
 }
 
+export class Component {
+  load(): void {}
+  unload(): void {}
+  addChild<T extends Component>(component: T): T { return component; }
+  removeChild<T extends Component>(component: T): T { return component; }
+}
+
+export const MarkdownRenderer = {
+  render: (_app: unknown, _markdown: string, el: HTMLElement, _sourcePath: string, _component: unknown): Promise<void> => {
+    el.innerHTML = _markdown;
+    return Promise.resolve();
+  },
+};
+
 export class Notice {
   constructor(_message: string, _timeout?: number) {}
 }

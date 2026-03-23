@@ -7,14 +7,15 @@ export interface IconButtonConfig {
 }
 
 /**
- * Appends a single `<button>` to `container`.
+ * Appends a single `<button>` to `container` and returns it.
  * CSS class: `.oac-icon-button`.
  */
-export function iconButton(container: HTMLElement, config: IconButtonConfig): void {
+export function iconButton(container: HTMLElement, config: IconButtonConfig): HTMLButtonElement {
   const btn = document.createElement('button');
   btn.className = 'oac-icon-button';
   btn.setAttribute('aria-label', config.label);
   btn.textContent = config.icon;
   btn.addEventListener('click', config.onClick);
   container.appendChild(btn);
+  return btn;
 }

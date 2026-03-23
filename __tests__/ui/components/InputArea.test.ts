@@ -177,6 +177,34 @@ describe('inputArea', () => {
     expect(onSend).toHaveBeenCalledWith('pre-filled');
   });
 
+  describe('upload button', () => {
+    it('renders an upload button when onFilesChosen is provided', () => {
+      const container = document.createElement('div');
+
+      inputArea(container, { onSend: vi.fn(), isStreaming: makeNotStreaming(), onAbort: vi.fn(), onFilesChosen: vi.fn() });
+
+      expect(container.querySelector('button[aria-label="Upload files"]')).not.toBeNull();
+    });
+
+    it('does not render an upload button when onFilesChosen is omitted', () => {
+      const container = document.createElement('div');
+
+      inputArea(container, { onSend: vi.fn(), isStreaming: makeNotStreaming(), onAbort: vi.fn() });
+
+      expect(container.querySelector('button[aria-label="Upload files"]')).toBeNull();
+    });
+
+    it('renders a hidden file input with multiple attribute when onFilesChosen is provided', () => {
+      const container = document.createElement('div');
+
+      inputArea(container, { onSend: vi.fn(), isStreaming: makeNotStreaming(), onAbort: vi.fn(), onFilesChosen: vi.fn() });
+
+      const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+      expect(fileInput).not.toBeNull();
+      expect(fileInput.multiple).toBe(true);
+    });
+  });
+
   describe('model select footer', () => {
     it('does not render a select when modelOptions is omitted', () => {
       const container = document.createElement('div');

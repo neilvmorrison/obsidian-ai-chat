@@ -17,7 +17,7 @@ src/
 ├── context/
 │   └── buildContext.ts          # buildContext(), extractEditorContext(), extractTags()
 ├── chat/
-│   ├── ChatSession.ts           # ChatSession: message state as signals, send(), abort(), serialize()
+│   ├── ChatSession.ts           # ChatSession: message state (role/content/timestamp/streaming?) as signals, send(), abort(), serialize()
 │   └── renderMessage.ts         # renderMessage(): streaming <pre> preview → MarkdownRenderer.render() finalize
 ├── commands/
 │   ├── registerCommands.ts      # registerCommands(): registers toggle-chat command and InlineGenerateSuggest
@@ -28,13 +28,13 @@ src/
     ├── index.ts                 # Barrel: re-exports all primitives, components, signals, and types
     └── components/
         ├── primitives/
-        │   ├── IconButton.ts    # iconButton(): single <button> with aria-label and onClick
+        │   ├── IconButton.ts    # iconButton(): single <button> with aria-label and onClick; returns HTMLButtonElement
         │   ├── EmptyState.ts    # emptyState(): single <div> for no-content placeholder
         │   ├── Input.ts         # input(): single <input> with onChange callback
         │   ├── Textarea.ts      # textarea(): single <textarea> with onChange callback
         │   └── Select.ts        # select(): single <select> with options and onChange callback
-        ├── InputArea.ts         # inputArea(): row-flex textarea + send/stop toggle + optional model-select footer
-        ├── MessageList.ts       # messageList(): subscribes to messages signal, renders items or empty state
+        ├── InputArea.ts         # inputArea(): row-flex textarea + send/stop toggle + optional upload button + model-select footer
+        ├── MessageList.ts       # messageList(): smart node-tracking renderer; user=text, assistant=<pre>→MarkdownRenderer; timestamps
         ├── StreamingControls.ts # streamingControls(): stop button visible only while streaming (standalone, unused by ChatView/ElaborateView)
         ├── ModelSelect.ts       # modelSelect(): <select> synced to a ReadonlySignal<string> (standalone, unused by ChatView)
         ├── TabBar.ts            # tabBar(): tab buttons; owns activeTab signal
