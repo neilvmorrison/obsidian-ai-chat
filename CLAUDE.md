@@ -12,7 +12,7 @@ src/
 ├── types/
 │   └── settings.ts              # ProviderType, ProviderSettings, AIChatSettings interfaces
 ├── providers/
-│   ├── buildModel.ts            # buildModel(): maps ProviderSettings → AI SDK LanguageModel (openai-compat/anthropic/gemini)
+│   ├── buildModel.ts            # buildModel(): maps ProviderSettings → AI SDK LanguageModel (ollama/openai-compat/anthropic/gemini)
 │   └── ollamaClient.ts          # fetchOllamaModels(): fetches locally downloaded model names from GET /api/tags
 ├── context/
 │   └── buildContext.ts          # buildContext(), extractEditorContext(), extractTags()

@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ProviderSettings } from '../../src/types/settings';
 
+const mockOllamaModel = { id: 'ollama-model' };
 const mockOpenAIModel = { id: 'openai-model' };
 const mockAnthropicModel = { id: 'anthropic-model' };
 const mockGeminiModel = { id: 'gemini-model' };
 
+const mockOllamaFactory = vi.fn().mockReturnValue(mockOllamaModel);
 const mockOpenAIFactory = vi.fn().mockReturnValue(mockOpenAIModel);
 const mockAnthropicFactory = vi.fn().mockReturnValue(mockAnthropicModel);
 const mockGeminiFactory = vi.fn().mockReturnValue(mockGeminiModel);
 
+vi.mock('ollama-ai-provider', () => ({
+  createOllama: vi.fn(() => mockOllamaFactory),
+}));
 vi.mock('@ai-sdk/openai', () => ({
   createOpenAI: vi.fn(() => mockOpenAIFactory),
 }));
@@ -19,6 +24,7 @@ vi.mock('@ai-sdk/google', () => ({
   createGoogleGenerativeAI: vi.fn(() => mockGeminiFactory),
 }));
 
+import { createOllama } from 'ollama-ai-provider';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -35,20 +41,37 @@ const base: Omit<ProviderSettings, 'type' | 'baseUrl'> = {
 describe('buildModel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockOllamaFactory.mockReturnValue(mockOllamaModel);
     mockOpenAIFactory.mockReturnValue(mockOpenAIModel);
     mockAnthropicFactory.mockReturnValue(mockAnthropicModel);
     mockGeminiFactory.mockReturnValue(mockGeminiModel);
+    (createOllama as ReturnType<typeof vi.fn>).mockReturnValue(mockOllamaFactory);
     (createOpenAI as ReturnType<typeof vi.fn>).mockReturnValue(mockOpenAIFactory);
     (createAnthropic as ReturnType<typeof vi.fn>).mockReturnValue(mockAnthropicFactory);
     (createGoogleGenerativeAI as ReturnType<typeof vi.fn>).mockReturnValue(mockGeminiFactory);
   });
 
+  describe('ollama', () => {
+    it('creates an Ollama provider with the native API baseUrl', () => {
+      const provider: ProviderSettings = { ...base, type: 'ollama', baseUrl: 'http://localhost:11434/api' };
+      buildModel(provider);
+      expect(createOllama).toHaveBeenCalledWith({ baseURL: 'http://localhost:11434/api' });
+    });
+
+    it('calls the provider factory with the model id', () => {
+      const provider: ProviderSettings = { ...base, type: 'ollama', baseUrl: 'http://localhost:11434/api' };
+      const result = buildModel(provider);
+      expect(mockOllamaFactory).toHaveBeenCalledWith('test-model');
+      expect(result).toBe(mockOllamaModel);
+    });
+  });
+
   describe('openai-compat', () => {
-    it('uses compatible mode for Ollama (localhost)', () => {
-      const provider: ProviderSettings = { ...base, type: 'openai-compat', baseUrl: 'http://localhost:11434/v1' };
+    it('uses compatible mode for localhost providers', () => {
+      const provider: ProviderSettings = { ...base, type: 'openai-compat', baseUrl: 'http://localhost:1234/v1' };
       buildModel(provider);
       expect(createOpenAI).toHaveBeenCalledWith({
-        baseURL: 'http://localhost:11434/v1',
+        baseURL: 'http://localhost:1234/v1',
         apiKey: 'sk-test',
         compatibility: 'compatible',
       });
@@ -75,7 +98,7 @@ describe('buildModel', () => {
     });
 
     it('calls the provider factory with the model id', () => {
-      const provider: ProviderSettings = { ...base, type: 'openai-compat', baseUrl: 'http://localhost:11434/v1' };
+      const provider: ProviderSettings = { ...base, type: 'openai-compat', baseUrl: 'https://openrouter.ai/api/v1' };
       const result = buildModel(provider);
       expect(mockOpenAIFactory).toHaveBeenCalledWith('test-model');
       expect(result).toBe(mockOpenAIModel);

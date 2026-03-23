@@ -1,4 +1,4 @@
-export type ProviderType = 'openai-compat' | 'anthropic' | 'gemini';
+export type ProviderType = 'ollama' | 'openai-compat' | 'anthropic' | 'gemini';
 
 export interface ProviderSettings {
   id: string;

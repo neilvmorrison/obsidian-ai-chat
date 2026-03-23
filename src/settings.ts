@@ -6,7 +6,7 @@ const PRESET_ORDER = ['ollama', 'lmstudio', 'openai', 'openrouter', 'anthropic',
 
 /** Factory functions — call to get a fresh preset object. Never export the objects directly. */
 export const PROVIDER_PRESETS: Record<string, () => ProviderSettings> = {
-  ollama:      () => ({ id: 'ollama',      name: 'Ollama',      type: 'openai-compat', baseUrl: 'http://localhost:11434/v1',                apiKey: '', model: 'llama3.2',            enabled: true  }),
+  ollama:      () => ({ id: 'ollama',      name: 'Ollama',      type: 'ollama',        baseUrl: 'http://localhost:11434/api',              apiKey: '', model: 'llama3.2',            enabled: true  }),
   lmstudio:    () => ({ id: 'lmstudio',    name: 'LM Studio',   type: 'openai-compat', baseUrl: 'http://localhost:1234/v1',                  apiKey: '', model: 'local-model',       enabled: false }),
   openai:      () => ({ id: 'openai',      name: 'OpenAI',      type: 'openai-compat', baseUrl: 'https://api.openai.com/v1',                 apiKey: '', model: 'gpt-4o',            enabled: false }),
   openrouter:  () => ({ id: 'openrouter',  name: 'OpenRouter',  type: 'openai-compat', baseUrl: 'https://openrouter.ai/api/v1',              apiKey: '', model: 'openai/gpt-4o',    enabled: false }),
@@ -72,9 +72,13 @@ export function migrate(raw: unknown): AIChatSettings {
 
   if (obj.version === 1) {
     const settings = raw as AIChatSettings;
-    // Normalize Ollama baseUrl: if saved with the old /api path, update to /v1.
-    if (settings.providers?.ollama?.baseUrl?.endsWith('/api')) {
-      settings.providers.ollama.baseUrl = settings.providers.ollama.baseUrl.replace(/\/api$/, '/v1');
+    // Migrate Ollama provider to native type: update type and baseUrl to use /api path.
+    if (settings.providers?.ollama) {
+      const ollama = settings.providers.ollama;
+      if ((ollama.type as string) === 'openai-compat' && ollama.baseUrl?.endsWith('/v1')) {
+        ollama.type = 'ollama';
+        ollama.baseUrl = ollama.baseUrl.replace(/\/v1$/, '/api');
+      }
     }
     return settings;
   }
@@ -84,8 +88,8 @@ export function migrate(raw: unknown): AIChatSettings {
     const result: AIChatSettings = structuredClone(DEFAULT_SETTINGS);
 
     if (typeof obj.baseURL === 'string') {
-      // Prototype stored the Ollama /api path; new schema uses the OpenAI-compat /v1 path.
-      result.providers.ollama.baseUrl = obj.baseURL.replace(/\/api$/, '/v1');
+      // Prototype stored the Ollama /api path; native ollama type also uses /api.
+      result.providers.ollama.baseUrl = obj.baseURL;
     }
     if (typeof obj.model === 'string')              result.providers.ollama.model = obj.model;
     if (typeof obj.contextWindowLines === 'number') result.contextWindowLines = obj.contextWindowLines;
