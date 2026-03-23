@@ -46,7 +46,7 @@ export function PromptInput({
         className={cn(
           "chat:relative chat:flex chat:items-end chat:gap-2",
           "chat:rounded-lg chat:border chat:border-border chat:bg-muted/50",
-          "chat:p-2 chat:pr-12"
+          "chat:p-2 chat:pr-12",
         )}
       >
         <Textarea
@@ -61,7 +61,7 @@ export function PromptInput({
             "chat:min-h-[36px] chat:max-h-[200px] chat:resize-none",
             "chat:border-0 chat:bg-transparent chat:shadow-none",
             "chat:p-1 chat:text-sm",
-            "focus-visible:chat:ring-0"
+            "focus-visible:chat:ring-0",
           )}
         />
         <div className="chat:absolute chat:bottom-2 chat:right-2">
@@ -70,18 +70,18 @@ export function PromptInput({
               size="icon"
               variant="ghost"
               onClick={onStop}
-              className="chat:h-8 chat:w-8 chat:rounded-full"
+              className="chat:rounded-full"
             >
-              <Square className="chat:h-4 chat:w-4 chat:fill-current" />
+              <Square className="chat:fill-current" />
             </Button>
           ) : (
             <Button
               size="icon"
               onClick={onSubmit}
               disabled={!value.trim()}
-              className="chat:h-8 chat:w-8 chat:rounded-full"
+              className="chat:rounded-full"
             >
-              <ArrowUp className="chat:h-4 chat:w-4" />
+              <ArrowUp className="h-8 w-8" />
             </Button>
           )}
         </div>

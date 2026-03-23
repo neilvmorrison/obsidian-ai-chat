@@ -15,13 +15,12 @@ export function App() {
   return (
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground">
       <EmptyState>
-        <BotIcon />
+        <div className="chat:flex chat:flex-col chat:gap-2 chat:items-center chat:justify-center">
+          <BotIcon />
+          <h1>Let's Chat!</h1>
+        </div>
       </EmptyState>
-      <PromptInput
-        value={input}
-        onChange={setInput}
-        onSubmit={handleSubmit}
-      />
+      <PromptInput value={input} onChange={setInput} onSubmit={handleSubmit} />
     </div>
   );
 }
