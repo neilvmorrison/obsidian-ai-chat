@@ -13,7 +13,12 @@ export default class ReactPlugin extends Plugin {
       name: "Toggle Chat Sidebar",
       hotkeys: [{ modifiers: ["Mod", "Shift"], key: "a" }],
       callback: () => {
-        console.log("invoked");
+        const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE);
+        if (existing.length > 0) {
+          existing[0].detach();
+        } else {
+          this.activateView();
+        }
       },
     });
     // When a chat note is opened, force reading view and inject "Open in Chat" button
@@ -82,7 +87,8 @@ export default class ReactPlugin extends Plugin {
       workspace.getLeavesOfType(VIEW_TYPE)[0] ?? null;
 
     if (!leaf) {
-      const rightLeaf = workspace.getRightLeaf(false);
+      const rightLeaf =
+        workspace.getRightLeaf(false) ?? workspace.getRightLeaf(true);
       if (rightLeaf) {
         await rightLeaf.setViewState({ type: VIEW_TYPE, active: true });
         leaf = rightLeaf;
