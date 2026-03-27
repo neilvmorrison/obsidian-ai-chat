@@ -151,6 +151,28 @@
   margin-left: var(--oac-space-1);
 }
 
+.oac-tab-bar__close {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--oac-space-1);
+  opacity: 0;
+  cursor: pointer;
+  border-radius: var(--oac-radius-sm);
+  padding: 2px;
+}
+
+.oac-tab-bar__close:hover {
+  background: var(--background-modifier-hover);
+}
+
+.oac-tab-bar__tab:hover .oac-tab-bar__close {
+  opacity: 0.6;
+}
+
+.oac-tab-bar__tab:hover .oac-tab-bar__close:hover {
+  opacity: 1;
+}
+
 /* ── Model select (inside input-area footer) ──────────────── */
 .oac-model-select {
   font-size: var(--oac-font-xs);

@@ -92,6 +92,23 @@ export function App({ initialMessages, initialModel }: AppProps) {
     [activeTabId]
   );
 
+  const closeTab = useCallback(
+    (id: string) => {
+      setTabs((prev) => {
+        if (prev.length <= 1) return prev;
+        const idx = prev.findIndex((t) => t.id === id);
+        const next = prev.filter((t) => t.id !== id);
+        if (id === activeTabId) {
+          const newActive = next[Math.min(idx, next.length - 1)];
+          setActiveTabId(newActive.id);
+        }
+        return next;
+      });
+      if (id === activeTabId) stopRef.current();
+    },
+    [activeTabId]
+  );
+
   // Auto-title tab after first assistant response
   const prevIsLoading = useRef(isLoading);
   useEffect(() => {
@@ -110,7 +127,7 @@ export function App({ initialMessages, initialModel }: AppProps) {
 
   return (
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground chat:relative">
-      <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} />
+      <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} onClose={closeTab} />
 
       {activeTab.messages.length === 0 ? (
         <EmptyState>
