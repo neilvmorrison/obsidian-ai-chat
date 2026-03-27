@@ -1,105 +1,109 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
-import { OllamaChatSettings, OllamaChatSettingTab, DEFAULT_SETTINGS } from './settings';
-import { ChatView, CHAT_VIEW_TYPE } from './chat/ChatView';
-import { ElaborateView, ELABORATE_VIEW_TYPE, ElaborateOptions } from './chat/ElaborateView';
-import { registerCommands } from './commands/registerCommands';
-import { InlineGenerateSuggest } from './chat/InlineGenerateSuggest';
+import { MarkdownView, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { ReactView, VIEW_TYPE } from "./view";
+import { parseChatNote } from "./utils/parseChatNote";
 
-export default class OllamaChatPlugin extends Plugin {
-  settings!: OllamaChatSettings;
+export default class ReactPlugin extends Plugin {
+  async onload() {
+    this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf));
 
-  async onload(): Promise<void> {
-    await this.loadSettings();
-
-    // Register view types
-    this.registerView(CHAT_VIEW_TYPE, leaf => new ChatView(leaf, this));
-    this.registerView(ELABORATE_VIEW_TYPE, leaf => new ElaborateView(leaf, this));
-
-    // Register commands, ribbon, context menu
-    registerCommands(this);
-
-    // Inline /generate trigger in the editor
-    this.registerEditorSuggest(new InlineGenerateSuggest(this));
-
-    // Settings tab
-    this.addSettingTab(new OllamaChatSettingTab(this.app, this));
-
-    // Persist the chat leaf in the right sidebar across sessions
-    this.app.workspace.onLayoutReady(async () => {
-      if (this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE).length === 0) {
-        await this.app.workspace.getRightLeaf(false)?.setViewState({ type: CHAT_VIEW_TYPE });
-      }
+    this.addRibbonIcon("bot-message-square", "Open Chat", () => {
+      this.activateView();
     });
+
+    // When a chat note is opened, force reading view and inject "Open in Chat" button
+    this.registerEvent(
+      this.app.workspace.on("file-open", (file) => {
+        if (!file) return;
+        const cache = this.app.metadataCache.getFileCache(file);
+        if (cache?.frontmatter?.type !== "obsidian-chat") return;
+
+        // Force reading (preview) mode
+        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        if (markdownView) {
+          const viewState = markdownView.leaf.getViewState();
+          if (viewState.state?.mode !== "preview") {
+            markdownView.leaf.setViewState({
+              ...viewState,
+              state: { ...viewState.state, mode: "preview" },
+            });
+          }
+
+          // Inject "Open in Chat" button if not already present
+          const container = markdownView.containerEl;
+          if (!container.querySelector(".oac-open-in-chat-btn")) {
+            const btn = container.createEl("button", {
+              cls: "oac-open-in-chat-btn",
+            });
+            btn.createEl("span", { text: "Open in Chat" });
+            btn.addEventListener("click", () => {
+              this.openChatFromFile(file);
+            });
+          }
+        }
+      })
+    );
+
+    // Clean up the button when navigating away from a chat note
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", () => {
+        // Remove any stale buttons from non-chat views
+        document.querySelectorAll(".oac-open-in-chat-btn").forEach((btn) => {
+          const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+          if (!markdownView) {
+            btn.remove();
+            return;
+          }
+          const file = markdownView.file;
+          if (!file) {
+            btn.remove();
+            return;
+          }
+          const cache = this.app.metadataCache.getFileCache(file);
+          if (cache?.frontmatter?.type !== "obsidian-chat") {
+            btn.remove();
+          }
+        });
+      })
+    );
   }
 
-  onunload(): void {
-    this.app.workspace.detachLeavesOfType(ELABORATE_VIEW_TYPE);
-  }
+  async activateView(): Promise<WorkspaceLeaf | null> {
+    const { workspace } = this.app;
 
-  async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
+    let leaf: WorkspaceLeaf | null =
+      workspace.getLeavesOfType(VIEW_TYPE)[0] ?? null;
 
-  async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
-  }
-
-  async openChatView(prefillText?: string, toggle = false): Promise<void> {
-    const existing = this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE);
-
-    if (toggle && existing.length > 0) {
-      const rightSplit = (this.app.workspace as any).rightSplit;
-      // If already active, collapse the sidebar (toggle off)
-      if (this.app.workspace.getActiveViewOfType(ChatView) != null) {
-        rightSplit?.collapse();
-        return;
+    if (!leaf) {
+      const rightLeaf = workspace.getRightLeaf(false);
+      if (rightLeaf) {
+        await rightLeaf.setViewState({ type: VIEW_TYPE, active: true });
+        leaf = rightLeaf;
       }
-      // Expand if collapsed, then reveal
-      rightSplit?.expand();
-      this.app.workspace.revealLeaf(existing[0]);
-      return;
     }
 
-    let leaf: WorkspaceLeaf;
-    if (existing.length > 0) {
-      leaf = existing[0];
-    } else {
-      leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf(true);
-      await leaf.setViewState({ type: CHAT_VIEW_TYPE, active: true });
+    if (leaf) {
+      workspace.revealLeaf(leaf);
     }
 
-    this.app.workspace.revealLeaf(leaf);
-
-    if (prefillText && leaf.view instanceof ChatView) {
-      const view = leaf.view as ChatView;
-      if (view.textarea) {
-        view.textarea.value = prefillText;
-        // Trigger resize
-        view.textarea.dispatchEvent(new Event('input'));
-        view.textarea.focus();
-      } else {
-        view.prefillText = prefillText;
-      }
-    }
+    return leaf;
   }
 
-  async openElaborateView(opts: ElaborateOptions): Promise<void> {
-    // Always open a fresh leaf for ElaborateView alongside ChatView
-    const existingElaborate = this.app.workspace.getLeavesOfType(ELABORATE_VIEW_TYPE);
+  async openChatFromFile(file: TFile): Promise<void> {
+    const content = await this.app.vault.read(file);
+    const parsed = parseChatNote(content);
+    if (!parsed) return;
 
-    let leaf: WorkspaceLeaf;
-    if (existingElaborate.length > 0) {
-      leaf = existingElaborate[0];
-      this.app.workspace.revealLeaf(leaf);
-    } else {
-      // Open as a new right leaf (does not replace ChatView)
-      leaf = this.app.workspace.getRightLeaf(false) ?? this.app.workspace.getLeaf(true);
-      await leaf.setViewState({ type: ELABORATE_VIEW_TYPE, active: true });
-      this.app.workspace.revealLeaf(leaf);
-    }
+    const leaf = await this.activateView();
+    if (!leaf) return;
 
-    if (leaf.view instanceof ElaborateView) {
-      await (leaf.view as ElaborateView).applyOptions(opts);
-    }
+    // Set the chat state on the view to restore the conversation
+    await leaf.setViewState({
+      type: VIEW_TYPE,
+      active: true,
+      state: {
+        initialMessages: parsed.messages,
+        initialModel: parsed.model,
+      },
+    });
   }
 }

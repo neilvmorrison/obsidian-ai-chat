@@ -1,9 +1,58 @@
+@import "tailwindcss/theme" prefix(chat);
+@import "tailwindcss/utilities" prefix(chat);
+@import "katex/dist/katex.min.css";
+@import "highlight.js/styles/github.css";
+
 /* ============================================================
-   OAC spacing & sizing tokens
-   All layout values in this file reference these variables.
+   Theme: Map shadcn/ui tokens → Obsidian CSS custom properties
    ============================================================ */
+
+@theme inline {
+  --color-background: var(--background-primary);
+  --color-foreground: var(--text-normal);
+
+  --color-muted: var(--background-secondary);
+  --color-muted-foreground: var(--text-muted);
+
+  --color-popover: var(--background-primary);
+  --color-popover-foreground: var(--text-normal);
+
+  --color-card: var(--background-primary);
+  --color-card-foreground: var(--text-normal);
+
+  --color-primary: var(--interactive-accent);
+  --color-primary-foreground: var(--text-on-accent);
+
+  --color-secondary: var(--background-secondary-alt);
+  --color-secondary-foreground: var(--text-normal);
+
+  --color-accent: var(--background-modifier-hover);
+  --color-accent-foreground: var(--text-normal);
+
+  --color-destructive: var(--text-error);
+  --color-destructive-foreground: var(--text-on-accent);
+
+  --color-border: var(--background-modifier-border);
+  --color-input: var(--background-modifier-border);
+  --color-ring: var(--interactive-accent);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Set the base radius value using Obsidian's radius */
 :root {
-  /* Spacing scale */
+  --radius: 0.5rem;
+}
+
+/* ============================================================
+   Legacy OAC styles (kept for backward compatibility)
+   ============================================================ */
+
+/* ── Layout tokens ────────────────────────────────────────── */
+:root {
   --oac-space-1: 2px;
   --oac-space-2: 4px;
   --oac-space-3: 6px;
@@ -13,82 +62,38 @@
   --oac-space-8: 16px;
   --oac-space-10: 20px;
 
-  /* Border radii */
   --oac-radius-sm: 3px;
   --oac-radius-md: 5px;
   --oac-radius-lg: 8px;
-  --oac-radius-pill: 50%;
 
-  /* Component dimensions */
   --oac-icon-btn-size: 26px;
-  --oac-close-btn-size: 22px;
-  --oac-scroll-btn-size: 30px;
-  --oac-tab-bar-height: 36px;
-  --oac-toolbar-height: 36px;
-  --oac-tab-max-width: 140px;
   --oac-icon-size: 14px;
-  --oac-close-icon-size: 13px;
+  --oac-tab-bar-height: 36px;
 
-  /* Typography */
-  --oac-font-sm: 0.78em;
   --oac-font-xs: 0.82em;
+  --oac-font-sm: 0.78em;
   --oac-font-base: 0.9em;
 }
 
-/* ============================================================
-   Obsidian Ollama Chat — styles.css
-   All selectors prefixed with .oac- to avoid collisions.
-   Only Obsidian CSS variables are used for theming.
-   ============================================================ */
-
-/* Global focus reset — no browser outline on any plugin element */
+/* ── Focus reset ──────────────────────────────────────────── */
 [class^="oac-"]:focus,
 [class*=" oac-"]:focus {
   outline: none;
 }
 
-/* Root container */
-.oac-chat-root {
+/* ── View containers ──────────────────────────────────────── */
+.oac-chat-view,
+.oac-elaborate-view {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  position: relative;
   background: var(--background-primary);
   color: var(--text-normal);
   font-size: var(--font-text-size);
 }
 
-/* ---- Close view button ---- */
-.oac-close-view-btn {
-  position: absolute;
-  top: var(--oac-space-3);
-  right: var(--oac-space-3);
-  z-index: 20;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--oac-close-btn-size);
-  height: var(--oac-close-btn-size);
-  padding: 0;
-  border-radius: var(--oac-radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-faint);
-  cursor: pointer;
-}
-
-.oac-close-view-btn:hover {
-  background: var(--background-modifier-hover);
-  color: var(--text-normal);
-}
-
-.oac-close-view-btn svg {
-  width: var(--oac-close-icon-size);
-  height: var(--oac-close-icon-size);
-}
-
-/* ---- Tab bar (toolbar row) ---- */
+/* ── Tab bar ──────────────────────────────────────────────── */
 .oac-tab-bar {
   display: flex;
   flex-direction: row;
@@ -96,30 +101,26 @@
   gap: var(--oac-space-2);
   padding: var(--oac-space-2) var(--oac-space-4);
   flex-shrink: 0;
-  background: transparent;
   min-height: var(--oac-tab-bar-height);
-  margin-top: var(--oac-space-10);
+  border-bottom: 1px solid var(--background-modifier-border);
 }
 
-.oac-tabs-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--oac-space-1);
+.oac-tab-bar__scroll {
   flex: 1;
   overflow-x: auto;
-  min-width: 0;
-}
-
-.oac-tabs-row::-webkit-scrollbar {
-  height: 0;
-}
-
-/* ---- Tabs ---- */
-.oac-tab {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: var(--oac-space-2);
+  scrollbar-width: none;
+}
+
+.oac-tab-bar__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.oac-tab-bar__tab {
+  display: inline-flex;
+  align-items: center;
   padding: var(--oac-space-1) var(--oac-space-5);
   border-radius: var(--oac-radius-md);
   border: 1px solid transparent;
@@ -128,99 +129,79 @@
   cursor: pointer;
   font-size: var(--oac-font-xs);
   white-space: nowrap;
-  transition: all 0.1s;
-  max-width: var(--oac-tab-max-width);
+  transition:
+    background 0.1s,
+    color 0.1s;
 }
 
-.oac-chat-root .oac-tab:not(.oac-tab--active) {
-  background: transparent;
-  border-color: transparent;
-}
-
-.oac-tab:hover {
+.oac-tab-bar__tab:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
-.oac-tab--active {
-  background: var(--background-primary);
+.oac-tab-bar__tab--active {
+  background: var(--background-secondary);
   color: var(--text-normal);
   border-color: var(--background-modifier-border);
 }
 
-.oac-tab-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-}
-
-.oac-tab-close {
+.oac-tab-bar__save {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: var(--oac-space-8);
-  height: var(--oac-space-8);
-  border-radius: var(--oac-radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-faint);
-  font-size: var(--oac-font-base);
+  margin-left: var(--oac-space-1);
+}
+
+.oac-tab-bar__close {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--oac-space-1);
+  opacity: 0;
   cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  flex-shrink: 0;
+  border-radius: var(--oac-radius-sm);
+  padding: 2px;
 }
 
-.oac-tab-close:hover {
+.oac-tab-bar__close:hover {
   background: var(--background-modifier-hover);
-  color: var(--text-normal);
 }
 
-.oac-tab-save-btn {
-  width: var(--oac-space-8);
-  height: var(--oac-space-8);
-  flex-shrink: 0;
+.oac-tab-bar__tab:hover .oac-tab-bar__close {
+  opacity: 0.6;
 }
 
-/* ---- Icon buttons (save, new chat, upload) ---- */
-.oac-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--oac-icon-btn-size);
-  height: var(--oac-icon-btn-size);
-  padding: 0;
-  border-radius: var(--oac-radius-md);
+.oac-tab-bar__tab:hover .oac-tab-bar__close:hover {
+  opacity: 1;
+}
+
+/* ── Model select (inside input-area footer) ──────────────── */
+.oac-model-select {
+  font-size: var(--oac-font-xs);
+  padding: var(--oac-space-1) var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
   border: 1px solid transparent;
   background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  max-width: 180px;
+}
+
+/* ── Primitives: select ───────────────────────────────────── */
+.oac-select {
+  font-size: var(--oac-font-xs);
+  padding: var(--oac-space-1) var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
   color: var(--text-muted);
   cursor: pointer;
-  flex-shrink: 0;
+  max-width: 200px;
 }
 
-.oac-icon-btn:hover {
-  background: var(--background-modifier-hover);
+.oac-select:hover {
   color: var(--text-normal);
-  border-color: var(--background-modifier-border);
 }
 
-.oac-icon-btn svg {
-  width: var(--oac-icon-size);
-  height: var(--oac-icon-size);
-}
-
-/* ---- Message list container ---- */
-.oac-message-list-container {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ---- Message list ---- */
+/* ── Message list ─────────────────────────────────────────── */
 .oac-message-list {
   flex: 1;
   overflow-y: auto;
@@ -231,59 +212,14 @@
   scroll-behavior: smooth;
 }
 
-/* ---- Empty state ---- */
-.oac-empty-state {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  pointer-events: none;
-  user-select: none;
-}
-
-.oac-empty-label {
-  font-size: 1.4em;
-  font-weight: 600;
-  color: var(--text-faint);
-}
-
-.oac-empty-logo {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 50%, #06b6d4 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 24px 0 rgba(124, 58, 237, 0.25);
-}
-
-.oac-empty-logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.oac-empty-logo-icon svg {
-  width: 42px;
-  height: 42px;
-  stroke: #fff;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
-}
-
-/* ---- Individual message ---- */
+/* ── Individual messages ──────────────────────────────────── */
 .oac-message {
   max-width: 85%;
   padding: var(--oac-space-4) var(--oac-space-6);
   border-radius: var(--oac-radius-lg);
   word-break: break-word;
-  position: relative;
   user-select: text;
   -webkit-user-select: text;
-  cursor: text;
 }
 
 .oac-message--user {
@@ -301,7 +237,7 @@
 }
 
 /* Streaming pre node */
-.oac-message-pre {
+.oac-message pre {
   margin: 0;
   padding: 0;
   font-family: inherit;
@@ -311,115 +247,154 @@
 }
 
 /* Rendered markdown inside assistant bubble */
-.oac-message-rendered {
-  overflow: visible;
-}
-
-.oac-message-rendered p,
-.oac-message-rendered ul,
-.oac-message-rendered ol,
-.oac-message-rendered blockquote,
-.oac-message-rendered h1,
-.oac-message-rendered h2,
-.oac-message-rendered h3,
-.oac-message-rendered h4,
-.oac-message-rendered h5,
-.oac-message-rendered h6,
-.oac-message-rendered pre {
+.oac-message p,
+.oac-message ul,
+.oac-message ol,
+.oac-message blockquote,
+.oac-message h1,
+.oac-message h2,
+.oac-message h3,
+.oac-message h4,
+.oac-message h5,
+.oac-message h6,
+.oac-message pre {
   margin-top: 0;
   margin-bottom: var(--oac-space-4);
 }
 
-.oac-message-rendered p:last-child,
-.oac-message-rendered ul:last-child,
-.oac-message-rendered ol:last-child,
-.oac-message-rendered blockquote:last-child,
-.oac-message-rendered h1:last-child,
-.oac-message-rendered h2:last-child,
-.oac-message-rendered h3:last-child,
-.oac-message-rendered h4:last-child,
-.oac-message-rendered h5:last-child,
-.oac-message-rendered h6:last-child,
-.oac-message-rendered pre:last-child {
+.oac-message p:last-child,
+.oac-message ul:last-child,
+.oac-message ol:last-child,
+.oac-message blockquote:last-child,
+.oac-message h1:last-child,
+.oac-message h2:last-child,
+.oac-message h3:last-child,
+.oac-message h4:last-child,
+.oac-message h5:last-child,
+.oac-message h6:last-child,
+.oac-message pre:last-child {
   margin-bottom: 0;
 }
 
-.oac-message-rendered pre {
+.oac-message pre {
   background: var(--background-primary);
   padding: var(--oac-space-4);
   border-radius: var(--oac-radius-sm);
   overflow-x: auto;
 }
 
-.oac-message-rendered code {
+.oac-message code {
   background: var(--background-primary);
   padding: var(--oac-space-1) var(--oac-space-2);
   border-radius: var(--oac-radius-sm);
   font-size: var(--oac-font-base);
 }
 
-/* ---- Lookup modal ---- */
-.oac-lookup-modal-content {
-  white-space: pre-wrap;
-  word-break: break-word;
-  line-height: 1.6;
-}
-
-/* ---- Scroll-to-bottom button ---- */
-.oac-scroll-btn {
-  position: absolute;
-  bottom: var(--oac-space-6);
-  right: var(--oac-space-6);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--oac-scroll-btn-size);
-  height: var(--oac-scroll-btn-size);
-  border-radius: var(--oac-radius-pill);
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary);
-  color: var(--text-muted);
-  cursor: pointer;
-  box-shadow: 0 var(--oac-space-1) var(--oac-space-3) rgba(0, 0, 0, 0.2);
-}
-
-.oac-scroll-btn:hover {
-  background: var(--background-modifier-hover);
+/* Callout suppression inside chat bubbles */
+.oac-message .callout {
+  background: none;
+  border-left: 2px solid var(--text-muted);
+  border-radius: 0;
+  padding: var(--oac-space-4) var(--oac-space-8);
   color: var(--text-normal);
 }
 
-.oac-scroll-btn svg {
-  width: var(--oac-icon-size);
-  height: var(--oac-icon-size);
+.oac-message .callout-title {
+  display: none;
 }
 
-/* ---- Input area ---- */
+.oac-message .callout-content {
+  padding: 0;
+}
+
+/* ── Message timestamp ────────────────────────────────────── */
+.oac-message__timestamp {
+  display: block;
+  text-align: right;
+  font-size: var(--oac-font-sm);
+  margin-top: var(--oac-space-2);
+  opacity: 0.6;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+.oac-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--oac-space-8);
+  color: var(--text-faint);
+  font-size: var(--oac-font-base);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Input area ───────────────────────────────────────────── */
 .oac-input-area {
   display: flex;
   flex-direction: column;
-  gap: var(--oac-space-3);
+  gap: var(--oac-space-2);
   padding: var(--oac-space-4) var(--oac-space-5);
   border-top: 1px solid var(--background-modifier-border);
-  border-radius: var(--oac-space-6);
   flex-shrink: 0;
   background: var(--background-secondary);
-  margin-bottom: var(--oac-space-10);
+  margin: 0 var(--oac-space-5) var(--oac-space-5);
+  border-radius: var(--oac-radius-lg);
 }
 
+.oac-input-area__row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--oac-space-6);
+  align-items: flex-end;
+  margin-bottom: var(--oac-space-6);
+}
+
+.oac-input-area__row .oac-textarea {
+  flex: 1;
+}
+
+.oac-input-area__footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+/* ── Primitives: textarea ─────────────────────────────────── */
+.oac-textarea {
+  width: 100%;
+  min-width: 0;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: var(--text-normal);
+  font-family: inherit;
+  font-size: var(--font-text-size);
+  line-height: 1.4;
+  max-height: calc(1.4em * 6 + var(--oac-space-6));
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.oac-textarea:focus {
+  outline: none;
+}
+
+.oac-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ── Primitives: input ────────────────────────────────────── */
 .oac-input {
   width: 100%;
-  resize: none;
   border: 1px solid var(--background-modifier-border);
-  border-radius: var(--oac-space-3);
+  border-radius: var(--oac-radius-sm);
   padding: var(--oac-space-3) var(--oac-space-4);
   font-size: var(--font-text-size);
   font-family: inherit;
   background: var(--background-primary);
   color: var(--text-normal);
-  line-height: 1.4;
-  max-height: calc(1.4em * 6 + var(--oac-space-6));
-  overflow-y: auto;
   box-sizing: border-box;
   transition: border-color 0.15s;
 }
@@ -433,239 +408,214 @@
   color: var(--text-muted);
 }
 
-.oac-input-actions {
-  display: flex;
-  justify-content: space-between;
+/* ── Primitives: icon button ──────────────────────────────── */
+.oac-icon-button {
+  display: inline-flex;
   align-items: center;
-  gap: var(--oac-space-3);
-}
-
-.oac-input-actions-left {
-  display: flex;
-  align-items: center;
-  gap: var(--oac-space-2);
-}
-
-.oac-input-actions-right {
-  display: flex;
-  align-items: center;
-  gap: var(--oac-space-3);
-}
-
-.oac-model-select {
-  font-size: var(--oac-font-xs);
-  padding: var(--oac-space-1) var(--oac-space-3);
-  border-radius: var(--oac-radius-sm);
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary);
+  justify-content: center;
+  width: var(--oac-icon-btn-size);
+  height: var(--oac-icon-btn-size);
+  padding: 0;
+  border-radius: var(--oac-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  max-width: 150px;
+  flex-shrink: 0;
 }
 
-.oac-model-select:hover {
+.oac-icon-button:hover {
+  background: var(--background-modifier-hover);
   color: var(--text-normal);
+  border-color: var(--background-modifier-border);
 }
 
-.oac-send-btn {
-  padding: var(--oac-space-2) var(--oac-space-8);
-  border-radius: var(--oac-radius-md);
-  border: none;
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  cursor: pointer;
-  font-size: var(--oac-font-base);
-  font-weight: 500;
-}
-
-.oac-send-btn:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-
-.oac-send-btn:disabled {
-  opacity: 0.5;
+.oac-icon-button:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.oac-abort-btn {
-  padding: var(--oac-space-2) var(--oac-space-6);
-  border-radius: var(--oac-radius-md);
-  border: 1px solid var(--background-modifier-border);
-  background: var(--background-primary);
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: var(--oac-font-base);
+.oac-icon-button svg {
+  width: var(--oac-icon-size);
+  height: var(--oac-icon-size);
 }
 
-.oac-abort-btn:hover {
-  background: var(--background-modifier-hover);
-  color: var(--text-normal);
-}
-
-/* ---- Save-on-close modal ---- */
-.oac-modal-desc {
-  color: var(--text-muted);
-  margin-bottom: var(--oac-space-8);
-}
-
-.oac-modal-btn-row {
-  display: flex;
-  gap: var(--oac-space-4);
-  justify-content: flex-end;
-}
-
-/* ---- Inline generate input ---- */
-.oac-inline-generate-wrapper {
-  position: fixed;
-  z-index: 1000;
-  display: flex;
-  align-items: flex-start;
-  max-width: min(420px, 90vw);
-}
-
-.oac-inline-generate-chevron {
-  color: var(--interactive-accent);
-  font-size: var(--font-text-size);
-  font-family: var(--font-text);
-  line-height: inherit;
-  user-select: none;
-  pointer-events: none;
-  opacity: 0.8;
-  padding-right: var(--oac-space-1);
-}
-
-.oac-inline-generate-input {
-  width: 100%;
-  padding: 0;
-  background: transparent;
-  border: none;
-  color: var(--text-normal);
-  font-family: var(--font-text);
-  font-size: var(--font-text-size);
-  line-height: inherit;
-  outline: none !important;
-  box-sizing: border-box;
-  resize: none;
-  overflow: hidden;
-}
-
-.oac-inline-generate-input::placeholder {
-  color: var(--text-faint);
-}
-
-.oac-inline-generate-input:focus {
-  outline: none;
-  border: none;
-}
-
-/* ---- Visibility utility ---- */
+/* ── Visibility utility ───────────────────────────────────── */
 .oac-hidden {
   display: none !important;
 }
 
-/* ---- ElaborateView toolbar (was missing) ---- */
-.oac-toolbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--oac-space-3) var(--oac-space-5);
-  flex-shrink: 0;
-  min-height: var(--oac-toolbar-height);
-  border-bottom: 1px solid var(--background-modifier-border);
-}
-
-.oac-title {
+/* ── Code blocks ─────────────────────────────────────────── */
+.oac-code-block {
+  background: var(--background-primary);
+  padding: var(--oac-space-4);
+  border-radius: var(--oac-radius-sm);
+  overflow-x: auto;
+  margin: var(--oac-space-4) 0;
   font-size: var(--oac-font-base);
-  font-weight: 600;
-  color: var(--text-muted);
 }
 
-.oac-clear-btn {
-  padding: var(--oac-space-1) var(--oac-space-5);
-  font-size: var(--oac-font-xs);
+.oac-code-block:last-child {
+  margin-bottom: 0;
+}
+
+.oac-inline-code {
+  background: var(--background-primary);
+  padding: var(--oac-space-1) var(--oac-space-2);
+  border-radius: var(--oac-radius-sm);
+  font-size: var(--oac-font-base);
+}
+
+/* ── Tables inside messages ──────────────────────────────── */
+.oac-message table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--oac-space-4) 0;
+  font-size: var(--oac-font-base);
+}
+
+.oac-message table:last-child {
+  margin-bottom: 0;
+}
+
+.oac-message th,
+.oac-message td {
+  border: 1px solid var(--background-modifier-border);
+  padding: var(--oac-space-3) var(--oac-space-4);
+  text-align: left;
+}
+
+.oac-message th {
+  background: var(--background-primary);
+  font-weight: 600;
+}
+
+.oac-message tr:nth-child(even) td {
+  background: var(--background-primary-alt, var(--background-primary));
+}
+
+/* ── Mermaid diagrams ────────────────────────────────────── */
+.oac-mermaid {
+  margin: var(--oac-space-4) 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.oac-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.oac-mermaid-loading {
+  padding: var(--oac-space-4);
+  color: var(--text-muted);
+  font-size: var(--oac-font-sm);
+  font-style: italic;
+}
+
+/* ── KaTeX display math ──────────────────────────────────── */
+.oac-message .katex-display {
+  margin: var(--oac-space-4) 0;
+  overflow-x: auto;
+}
+
+/* ── System messages (model change indicator) ────────────── */
+.oac-system-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--oac-space-4);
+  padding: var(--oac-space-2) 0;
+}
+
+.oac-system-message::before,
+.oac-system-message::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--background-modifier-border);
+}
+
+.oac-system-message__text {
+  font-size: var(--oac-font-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Typing indicator ────────────────────────────────────── */
+.oac-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: var(--oac-space-4) var(--oac-space-6);
+  align-self: flex-start;
+}
+
+.oac-typing-indicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: oac-bounce 1.4s ease-in-out infinite;
+}
+
+.oac-typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.oac-typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes oac-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+/* ── Highlight.js theme override for dark mode ───────────── */
+.theme-dark .hljs {
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+/* ── List styling inside messages ────────────────────────── */
+.oac-message ul,
+.oac-message ol {
+  padding-left: 1.5em;
+}
+
+.oac-message li {
+  margin-bottom: var(--oac-space-2);
+}
+
+/* ── "Open in Chat" button on saved chat notes ───────────── */
+.oac-open-in-chat-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: var(--oac-radius-md);
   border: 1px solid var(--background-modifier-border);
-  background: transparent;
-  color: var(--text-muted);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: var(--oac-font-xs);
   cursor: pointer;
+  transition: opacity 0.15s;
 }
 
-.oac-clear-btn:hover {
-  background: var(--background-modifier-hover);
-  color: var(--text-normal);
+.oac-open-in-chat-btn:hover {
+  opacity: 0.85;
 }
 
-/* ── Agent modal ──────────────────────────────────────────── */
-.oac-agent-modal-desc {
-  color: var(--text-muted);
-  margin-bottom: 12px;
-}
-
-.oac-agent-modal-input {
-  width: 100%;
-}
-
-/* ── Tool confirm modal ───────────────────────────────────── */
-.oac-confirm-card {
-  background: var(--background-secondary);
-  border-radius: 6px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-}
-
-.oac-confirm-tool-name {
-  font-weight: 600;
-  font-size: 1em;
-  color: var(--text-accent);
-  margin: 0 0 10px;
-  font-family: var(--font-monospace);
-}
-
-.oac-confirm-params {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.88em;
-}
-
-.oac-confirm-param-key {
-  color: var(--text-muted);
-  padding: 3px 12px 3px 0;
-  vertical-align: top;
-  white-space: nowrap;
-  font-family: var(--font-monospace);
-}
-
-.oac-confirm-param-val {
-  color: var(--text-normal);
-  padding: 3px 0;
-  word-break: break-word;
-  max-width: 340px;
-  font-family: var(--font-monospace);
-  white-space: pre-wrap;
-}
-
-/* Suppress Obsidian callout styling inside chat messages */
-.oac-message-rendered .callout {
-  background: none;
-  border-left: 2px solid var(--text-muted);
-  border-radius: 0;
-  padding: var(--oac-space-4) var(--oac-space-8);
-  color: var(--text-normal);
-}
-.oac-message-rendered .callout-title {
+/* ── Chat note readonly: hide the data block in preview ──── */
+.obsidian-chat-note .markdown-preview-view pre:last-child {
   display: none;
 }
-.oac-message-rendered .callout-content {
-  padding: 0;
-}
 
-/* Context-carry banner shown in new chat tabs opened from prior chats */
-.oac-context-banner {
-  font-size: var(--oac-font-xs);
-  color: var(--text-muted);
-  text-align: center;
-  padding: var(--oac-space-4) 0;
-  border-bottom: 1px solid var(--background-modifier-border);
-  margin-bottom: var(--oac-space-4);
+/* ── Chat note: position the view container for the button ─ */
+.obsidian-chat-note .markdown-preview-view {
+  position: relative;
 }
