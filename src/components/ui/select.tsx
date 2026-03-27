@@ -1,6 +1,10 @@
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
+import {
+  forwardRef,
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 const Select = SelectPrimitive.Root;
@@ -15,7 +19,7 @@ const SelectTrigger = forwardRef<
     ref={ref}
     className={cn(
       "chat:flex chat:h-9 chat:w-full chat:items-center chat:justify-between chat:whitespace-nowrap chat:rounded-md chat:border chat:border-border chat:bg-transparent chat:px-3 chat:py-2 chat:text-sm chat:shadow-sm chat:ring-offset-background placeholder:chat:text-muted-foreground focus:chat:outline-none focus:chat:ring-1 focus:chat:ring-ring disabled:chat:cursor-not-allowed disabled:chat:opacity-50 [&>span]:chat:line-clamp-1",
-      className
+      className,
     )}
     {...props}
   >
@@ -35,7 +39,7 @@ const SelectScrollUpButton = forwardRef<
     ref={ref}
     className={cn(
       "chat:flex chat:cursor-default chat:items-center chat:justify-center chat:py-1",
-      className
+      className,
     )}
     {...props}
   >
@@ -52,14 +56,15 @@ const SelectScrollDownButton = forwardRef<
     ref={ref}
     className={cn(
       "chat:flex chat:cursor-default chat:items-center chat:justify-center chat:py-1",
-      className
+      className,
     )}
     {...props}
   >
     <ChevronDown className="chat:h-4 chat:w-4" />
   </SelectPrimitive.ScrollDownButton>
 ));
-SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayName;
+SelectScrollDownButton.displayName =
+  SelectPrimitive.ScrollDownButton.displayName;
 
 const SelectContent = forwardRef<
   ElementRef<typeof SelectPrimitive.Content>,
@@ -69,10 +74,10 @@ const SelectContent = forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "chat:relative chat:z-50 chat:max-h-96 chat:min-w-[8rem] chat:overflow-hidden chat:rounded-md chat:border chat:border-border chat:bg-popover chat:text-popover-foreground chat:shadow-md",
+        "chat:relative chat:z-50 chat:max-h-96 chat:min-w-32 chat:overflow-hidden chat:rounded-md chat:border chat:border-border chat:bg-popover chat:text-popover-foreground chat:shadow-md",
         position === "popper" &&
           "data-[side=bottom]:chat:translate-y-1 data-[side=left]:chat:-translate-x-1 data-[side=right]:chat:translate-x-1 data-[side=top]:chat:-translate-y-1",
-        className
+        className,
       )}
       position={position}
       {...props}
@@ -82,7 +87,7 @@ const SelectContent = forwardRef<
         className={cn(
           "chat:p-1",
           position === "popper" &&
-            "chat:h-[var(--radix-select-trigger-height)] chat:w-full chat:min-w-[var(--radix-select-trigger-width)]"
+            "chat:h-(--radix-select-trigger-height) chat:w-full chat:min-w-(--radix-select-trigger-width)",
         )}
       >
         {children}
@@ -101,7 +106,7 @@ const SelectItem = forwardRef<
     ref={ref}
     className={cn(
       "chat:relative chat:flex chat:w-full chat:cursor-default chat:select-none chat:items-center chat:rounded-sm chat:py-1.5 chat:pl-2 chat:pr-8 chat:text-sm chat:outline-none focus:chat:bg-muted focus:chat:text-foreground data-[disabled]:chat:pointer-events-none data-[disabled]:chat:opacity-50",
-      className
+      className,
     )}
     {...props}
   >
