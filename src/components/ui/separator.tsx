@@ -1,5 +1,9 @@
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
+import {
+  forwardRef,
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 const Separator = forwardRef<
@@ -8,7 +12,7 @@ const Separator = forwardRef<
 >(
   (
     { className, orientation = "horizontal", decorative = true, ...props },
-    ref
+    ref,
   ) => (
     <SeparatorPrimitive.Root
       ref={ref}
@@ -17,13 +21,13 @@ const Separator = forwardRef<
       className={cn(
         "chat:shrink-0 chat:bg-border",
         orientation === "horizontal"
-          ? "chat:h-[1px] chat:w-full"
-          : "chat:h-full chat:w-[1px]",
-        className
+          ? "chat:h-px chat:w-full"
+          : "chat:h-full chat:w-px",
+        className,
       )}
       {...props}
     />
-  )
+  ),
 );
 Separator.displayName = SeparatorPrimitive.Root.displayName;
 

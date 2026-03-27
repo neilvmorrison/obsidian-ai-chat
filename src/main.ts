@@ -5,11 +5,17 @@ import { parseChatNote } from "./utils/parseChatNote";
 export default class ReactPlugin extends Plugin {
   async onload() {
     this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf));
-
     this.addRibbonIcon("bot-message-square", "Open Chat", () => {
       this.activateView();
     });
-
+    this.addCommand({
+      id: "toggle-chat-sidebar",
+      name: "Toggle Chat Sidebar",
+      hotkeys: [{ modifiers: ["Mod", "Shift"], key: "a" }],
+      callback: () => {
+        console.log("invoked");
+      },
+    });
     // When a chat note is opened, force reading view and inject "Open in Chat" button
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
@@ -18,7 +24,8 @@ export default class ReactPlugin extends Plugin {
         if (cache?.frontmatter?.type !== "obsidian-chat") return;
 
         // Force reading (preview) mode
-        const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+        const markdownView =
+          this.app.workspace.getActiveViewOfType(MarkdownView);
         if (markdownView) {
           const viewState = markdownView.leaf.getViewState();
           if (viewState.state?.mode !== "preview") {
@@ -40,7 +47,7 @@ export default class ReactPlugin extends Plugin {
             });
           }
         }
-      })
+      }),
     );
 
     // Clean up the button when navigating away from a chat note
@@ -48,7 +55,8 @@ export default class ReactPlugin extends Plugin {
       this.app.workspace.on("active-leaf-change", () => {
         // Remove any stale buttons from non-chat views
         document.querySelectorAll(".oac-open-in-chat-btn").forEach((btn) => {
-          const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+          const markdownView =
+            this.app.workspace.getActiveViewOfType(MarkdownView);
           if (!markdownView) {
             btn.remove();
             return;
@@ -63,7 +71,7 @@ export default class ReactPlugin extends Plugin {
             btn.remove();
           }
         });
-      })
+      }),
     );
   }
 
