@@ -65,7 +65,7 @@ export function PromptInput({
           placeholder={placeholder}
           rows={1}
           className={cn(
-            "chat:min-h-[36px] chat:max-h-[200px] chat:resize-none",
+            "chat:min-h-9 chat:max-h-50 chat:resize-none",
             "chat:border-0 chat:bg-transparent chat:shadow-none",
             "chat:p-1 chat:text-sm",
             "focus-visible:chat:ring-0",

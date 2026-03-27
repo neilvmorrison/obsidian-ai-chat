@@ -1,5 +1,9 @@
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
+import {
+  forwardRef,
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 const ScrollArea = forwardRef<
@@ -30,10 +34,10 @@ const ScrollBar = forwardRef<
     className={cn(
       "chat:flex chat:touch-none chat:select-none chat:transition-colors",
       orientation === "vertical" &&
-        "chat:h-full chat:w-2.5 chat:border-l chat:border-l-transparent chat:p-[1px]",
+        "chat:h-full chat:w-2.5 chat:border-l chat:border-l-transparent chat:p-px",
       orientation === "horizontal" &&
-        "chat:h-2.5 chat:flex-col chat:border-t chat:border-t-transparent chat:p-[1px]",
-      className
+        "chat:h-2.5 chat:flex-col chat:border-t chat:border-t-transparent chat:p-px",
+      className,
     )}
     {...props}
   >
