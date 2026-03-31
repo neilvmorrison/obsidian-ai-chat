@@ -7,7 +7,10 @@ import {
   EditorSuggestTriggerInfo,
   TFile,
 } from "obsidian";
-import type { InlineCommandId, IPendingCommand } from "@/editor/inlinePromptExtension";
+import type {
+  InlineCommandId,
+  IPendingCommand,
+} from "@/editor/inlinePromptExtension";
 
 interface IInlineCommand {
   id: InlineCommandId;
@@ -16,8 +19,16 @@ interface IInlineCommand {
 }
 
 const COMMANDS: IInlineCommand[] = [
-  { id: "generate", label: "/generate", description: "Generate text inline at cursor" },
-  { id: "ask", label: "/ask", description: "Open chat with your prompt pre-filled" },
+  {
+    id: "generate",
+    label: "/generate",
+    description: " Generate text inline at cursor",
+  },
+  {
+    id: "ask",
+    label: "/ask",
+    description: " Open chat with your prompt pre-filled",
+  },
 ];
 
 export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
@@ -27,12 +38,16 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
 
   constructor(
     app: App,
-    private pendingRef: { current: IPendingCommand | null }
+    private pendingRef: { current: IPendingCommand | null },
   ) {
     super(app);
   }
 
-  onTrigger(cursor: EditorPosition, editor: Editor, _file: TFile): EditorSuggestTriggerInfo | null {
+  onTrigger(
+    cursor: EditorPosition,
+    editor: Editor,
+    _file: TFile,
+  ): EditorSuggestTriggerInfo | null {
     const line = editor.getLine(cursor.line);
     const sub = line.substring(0, cursor.ch);
     const match = sub.match(/\/(\w*)$/);
@@ -59,11 +74,20 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
 
   renderSuggestion(item: IInlineCommand, el: HTMLElement): void {
     const wrapper = el.createDiv({ cls: "oac-inline-suggestion" });
-    wrapper.createSpan({ text: item.label, cls: "oac-inline-suggestion__label" });
-    wrapper.createSpan({ text: item.description, cls: "oac-inline-suggestion__desc" });
+    wrapper.createSpan({
+      text: item.label,
+      cls: "oac-inline-suggestion__label",
+    });
+    wrapper.createSpan({
+      text: item.description,
+      cls: "oac-inline-suggestion__desc",
+    });
   }
 
-  selectSuggestion(item: IInlineCommand, _evt: MouseEvent | KeyboardEvent): void {
+  selectSuggestion(
+    item: IInlineCommand,
+    _evt: MouseEvent | KeyboardEvent,
+  ): void {
     const editor = this.storedEditor;
     const start = this.storedStart;
     const end = this.storedEnd;
