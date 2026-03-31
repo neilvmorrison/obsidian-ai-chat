@@ -307,6 +307,49 @@
   padding: 0;
 }
 
+/* ── Thinking block ───────────────────────────────────────── */
+.oac-thinking-block {
+  border-left: 3px solid var(--color-purple);
+  border-radius: var(--oac-radius-sm);
+  background: var(--background-secondary);
+  margin-bottom: var(--oac-space-6);
+  overflow: hidden;
+}
+
+.oac-thinking-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--oac-space-3);
+  padding: var(--oac-space-3) var(--oac-space-6);
+  font-size: var(--oac-font-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.oac-thinking-summary::-webkit-details-marker {
+  display: none;
+}
+
+.oac-thinking-summary::before {
+  content: "▶";
+  font-size: 0.65em;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.oac-thinking-block[open] > .oac-thinking-summary::before {
+  transform: rotate(90deg);
+}
+
+.oac-thinking-body {
+  padding: var(--oac-space-4) var(--oac-space-8);
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: var(--oac-font-sm);
+  color: var(--text-muted);
+}
+
 /* ── Message timestamp ────────────────────────────────────── */
 .oac-message__timestamp {
   display: block;

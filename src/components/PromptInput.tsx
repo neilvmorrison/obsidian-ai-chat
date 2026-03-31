@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Square } from "lucide-react";
+import { ArrowUp, Square, UploadIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSelector } from "@/components/ModelSelector";
 
@@ -94,7 +94,10 @@ export function PromptInput({
             )}
           </div>
         </div>
-        <div className="chat:flex chat:items-center">
+        <div className="chat:flex chat:items-center chat:gap-2">
+          <Button size="icon" variant="ghost" className="chat:rounded-full">
+            <UploadIcon className="chat:size-3" />
+          </Button>
           <ModelSelector
             model={model}
             onModelChange={onModelChange}

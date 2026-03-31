@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "@/hooks/useStreamChat";
-import { MarkdownMessage } from "./MarkdownMessage";
+import { format_timestamp } from "@/utils/format_timestamp";
+import { AssistantMessage } from "./AssistantMessage";
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -49,8 +50,14 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
             {msg.role === "user" ? (
               msg.content
             ) : (
-              <MarkdownMessage content={msg.content} />
+              <AssistantMessage
+                content={msg.content}
+                thinkingDuration={msg.thinkingDuration}
+              />
             )}
+            <span className="oac-message__timestamp">
+              {msg.timestamp ? format_timestamp(msg.timestamp) : null}
+            </span>
           </div>
         )
       )}

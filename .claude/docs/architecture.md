@@ -16,6 +16,8 @@ src/
 │   ├── TokenUsageBar.tsx     # Token usage progress bar with color thresholds
 │   ├── ModelSelector.tsx     # Dropdown for selecting Ollama model
 │   ├── SaveChatButton.tsx    # Saves current tab to Obsidian vault
+│   ├── AssistantMessage.tsx  # Parses think-tag segments; delegates to ThinkingBlock or MarkdownMessage
+│   ├── ThinkingBlock.tsx     # Collapsible <details> panel for <think>...</think> content
 │   ├── MermaidBlock.tsx      # Lazy mermaid diagram renderer
 │   ├── BotIcon.tsx           # SVG icon component
 │   └── EmptyState.tsx        # Empty chat placeholder
@@ -34,7 +36,8 @@ src/
 ├── utils/
 │   ├── saveChat.ts           # Serialize chat to vault Markdown note
 │   ├── parseChatNote.ts      # Parse saved chat note back to messages
-│   └── generateTitle.ts      # AI-generated tab title after first response
+│   ├── generateTitle.ts      # AI-generated tab title after first response
+│   └── parse_thinking_content.ts  # Split raw content string into text/thinking IContentSegment[]
 ├── main.ts                   # Plugin entry point (ReactPlugin extends Plugin)
 ├── view.ts                   # ReactView (ItemView) — mounts React root
 └── styles.css                # Tailwind CSS source input
@@ -57,6 +60,15 @@ Root React component. Owns all tab state: `tabs[]` and `activeTabId`. Each tab s
 
 ### `src/hooks/useStreamChat.ts`
 Core AI hook. Streams responses via Vercel AI SDK `streamText()`. Fetches available models from Ollama REST API. Manages `AbortController` for cancellation. Batches streaming state updates via `requestAnimationFrame`. Filters out `role === "system"` messages before building Ollama requests (system messages are UI-only). After each stream completes, awaits `result.usage` and calls the caller-supplied `setTokenUsage` with `inputTokens + outputTokens`.
+
+### `src/utils/parse_thinking_content.ts`
+Parses a raw assistant message string into `IContentSegment[]` — either `{ type: "text" }` or `{ type: "thinking", isStreaming }`. Detects unclosed `<think>` tags during streaming and marks them as `isStreaming: true`. Empty segments are dropped.
+
+### `src/components/AssistantMessage.tsx`
+Wrapper rendered for all assistant messages. Calls `parse_thinking_content` via `useMemo` and maps each segment to either `<ThinkingBlock>` (for `type: "thinking"`) or `<MarkdownMessage>` (for `type: "text"`). Wrapped in `memo`.
+
+### `src/components/ThinkingBlock.tsx`
+Collapsible `<details>` element for `<think>` content. Manages `isOpen` state that auto-opens when `isStreaming` is `true` and auto-closes when streaming ends; user can toggle freely at any time. Renders thinking content via `<MarkdownMessage>`.
 
 ### `src/components/TokenUsageBar.tsx`
 Displays a progress bar showing token usage relative to the configured limit. Color thresholds: green below 50%, orange 50–75%, red above 75%. Renders token counts as formatted strings (e.g. `6.4k/8k`). Only shown when the active tab has messages.

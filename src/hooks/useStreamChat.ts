@@ -8,6 +8,8 @@ export interface ChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  timestamp?: number;
+  thinkingDuration?: number;
 }
 
 export interface UseStreamChatOptions {
@@ -49,6 +51,7 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
       id: crypto.randomUUID(),
       role: "system",
       content: `Model changed to ${newModel}`,
+      timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, systemMsg]);
   }, [model, setModel, setMessages]);
@@ -66,11 +69,13 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
       id: crypto.randomUUID(),
       role: "user",
       content: text,
+      timestamp: Date.now(),
     };
     const assistantMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "assistant",
       content: "",
+      timestamp: Date.now(),
     };
 
     const history = [...messages, userMsg];
@@ -92,9 +97,22 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
 
       let accumulated = "";
       let rafPending = false;
+      let thinkStartTime: number | null = null;
+      let thinkingDuration: number | null = null;
+      let seenOpenTag = false;
+      let seenCloseTag = false;
 
       for await (const delta of result.textStream) {
         accumulated += delta;
+
+        if (!seenOpenTag && accumulated.includes("<think>")) {
+          seenOpenTag = true;
+          thinkStartTime = Date.now();
+        }
+        if (!seenCloseTag && seenOpenTag && accumulated.includes("</think>")) {
+          seenCloseTag = true;
+          thinkingDuration = Date.now() - thinkStartTime!;
+        }
 
         if (!rafPending) {
           rafPending = true;
@@ -116,13 +134,13 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
       const usage = await result.usage;
       setTokenUsage((usage.inputTokens ?? 0) + (usage.outputTokens ?? 0));
 
-      // Final flush to ensure last tokens are rendered
       const finalContent = accumulated;
       setMessages((prev) => {
         const copy = [...prev];
         copy[copy.length - 1] = {
           ...copy[copy.length - 1],
           content: finalContent,
+          ...(thinkingDuration !== null ? { thinkingDuration } : {}),
         };
         return copy;
       });
