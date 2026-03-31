@@ -4,19 +4,21 @@ import { createElement } from "react";
 import { App, type AppProps } from "./components/App";
 import { ObsidianAppProvider } from "./contexts/ObsidianAppContext";
 import type { ChatMessage } from "./hooks/useStreamChat";
+import type ReactPlugin from "./main";
 
 export const VIEW_TYPE = "react-view";
 
 interface ChatViewState {
   initialMessages?: ChatMessage[];
   initialModel?: string;
+  initialInput?: string;
 }
 
 export class ReactView extends ItemView {
   private root: Root | null = null;
   private chatState: ChatViewState = {};
 
-  constructor(leaf: WorkspaceLeaf) {
+  constructor(leaf: WorkspaceLeaf, private plugin: ReactPlugin) {
     super(leaf);
   }
 
@@ -41,10 +43,12 @@ export class ReactView extends ItemView {
     }
   }
 
-  private renderApp() {
+  renderApp() {
     const props: AppProps = {
       initialMessages: this.chatState.initialMessages,
       initialModel: this.chatState.initialModel,
+      initialInput: this.chatState.initialInput,
+      tokenLimit: this.plugin.settings.tokenLimit,
     };
     this.root!.render(
       createElement(ObsidianAppProvider, { app: this.app, children: createElement(App, props) })

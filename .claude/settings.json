@@ -1,0 +1,77 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(test:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm store prune:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm format:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "mcp__linear-server__get_issue",
+      "mcp__plugin_figma_figma__get_design_context",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__*",
+      "Bash(grep -r *)",
+      "Bash(git * branch -a)",
+      "Bash(find*)",
+      "Write(*claude/scaffolder-cache*)",
+      "Bash(mkdir -p *claude/scaffolder-cache)"
+    ],
+    "deny": [
+      "Bash(rm -rf*)",
+      "Bash(sudo*)",
+      "Write(.env*)",
+      "Write(*.pem)",
+      "Write(*.key)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/skill-activation-prompt.js"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/skill-activation-file.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/neilmorrison/projects/apps/obsidian-chat && tsc --noEmit 2>&1 | head -50"
+          }
+        ]
+      }
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["linear-server"],
+  "enabledPlugins": {
+    "figma@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": true
+  }
+}

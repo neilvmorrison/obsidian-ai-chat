@@ -17,9 +17,10 @@ export interface UseStreamChatOptions {
   setInput: (value: string) => void;
   model: string;
   setModel: (value: string) => void;
+  setTokenUsage: (value: number) => void;
 }
 
-export function useStreamChat({ messages, setMessages, input, setInput, model, setModel }: UseStreamChatOptions) {
+export function useStreamChat({ messages, setMessages, input, setInput, model, setModel, setTokenUsage }: UseStreamChatOptions) {
   const [isLoading, setIsLoading] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([DEFAULT_MODEL]);
   const abortRef = useRef<AbortController | null>(null);
@@ -112,6 +113,9 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
         }
       }
 
+      const usage = await result.usage;
+      setTokenUsage((usage.inputTokens ?? 0) + (usage.outputTokens ?? 0));
+
       // Final flush to ensure last tokens are rendered
       const finalContent = accumulated;
       setMessages((prev) => {
@@ -142,7 +146,7 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
       setIsLoading(false);
       abortRef.current = null;
     }
-  }, [input, isLoading, messages, model, setMessages, setInput]);
+  }, [input, isLoading, messages, model, setMessages, setInput, setTokenUsage]);
 
   return { handleSubmit, isLoading, stop, changeModel, availableModels };
 }

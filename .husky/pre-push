@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+remote_ref=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "HEAD~1")
+files=$(git diff --name-only "$remote_ref" HEAD -- '*.ts' '*.tsx' 2>/dev/null)
+
+[ -z "$files" ] && exit 0
+
+# No test runner configured — run typecheck only
+cd "$(git rev-parse --show-toplevel)" && tsc --noEmit

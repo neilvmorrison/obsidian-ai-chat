@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { BotIcon } from "@/components/BotIcon";
 import { MessageList } from "@/components/MessageList";
 import { TabBar } from "@/components/TabBar";
+import { TokenUsageBar } from "@/components/TokenUsageBar";
 import { useStreamChat, DEFAULT_MODEL, type ChatMessage } from "@/hooks/useStreamChat";
 import { generateTitle } from "@/utils/generateTitle";
 
@@ -13,6 +14,7 @@ interface Tab {
   messages: ChatMessage[];
   input: string;
   model: string;
+  tokenUsage: number;
 }
 
 function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): Tab {
@@ -22,15 +24,18 @@ function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL):
     messages,
     input: "",
     model,
+    tokenUsage: 0,
   };
 }
 
 export interface AppProps {
   initialMessages?: ChatMessage[];
   initialModel?: string;
+  initialInput?: string;
+  tokenLimit?: number;
 }
 
-export function App({ initialMessages, initialModel }: AppProps) {
+export function App({ initialMessages, initialModel, initialInput, tokenLimit = 8192 }: AppProps) {
   const [tabs, setTabs] = useState<Tab[]>(() => [
     createTab(initialMessages ?? [], initialModel ?? DEFAULT_MODEL),
   ]);
@@ -66,6 +71,13 @@ export function App({ initialMessages, initialModel }: AppProps) {
     [activeTabId]
   );
 
+  const setTokenUsage = useCallback(
+    (value: number) => {
+      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, tokenUsage: value } : t)));
+    },
+    [activeTabId]
+  );
+
   const { handleSubmit, isLoading, stop, changeModel, availableModels } = useStreamChat({
     messages: activeTab.messages,
     setMessages,
@@ -73,6 +85,7 @@ export function App({ initialMessages, initialModel }: AppProps) {
     setInput,
     model: activeTab.model,
     setModel,
+    setTokenUsage,
   });
 
   stopRef.current = stop;
@@ -109,6 +122,19 @@ export function App({ initialMessages, initialModel }: AppProps) {
     [activeTabId]
   );
 
+  const prevInitialInput = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!initialInput || initialInput === prevInitialInput.current) return;
+    prevInitialInput.current = initialInput;
+    if (activeTab.messages.length > 0) {
+      const tab = { ...createTab(), input: initialInput };
+      setTabs((prev) => [...prev, tab]);
+      setActiveTabId(tab.id);
+    } else {
+      setInput(initialInput);
+    }
+  }, [initialInput, activeTab.messages.length, setInput]);
+
   // Auto-title tab after first assistant response
   const prevIsLoading = useRef(isLoading);
   useEffect(() => {
@@ -138,6 +164,9 @@ export function App({ initialMessages, initialModel }: AppProps) {
         </EmptyState>
       ) : (
         <MessageList messages={activeTab.messages} isLoading={isLoading} />
+      )}
+      {activeTab.messages.length > 0 && (
+        <TokenUsageBar tokenUsage={activeTab.tokenUsage} tokenLimit={tokenLimit} />
       )}
       <PromptInput
         value={activeTab.input}

@@ -1,10 +1,51 @@
-import { MarkdownView, Plugin, TFile, WorkspaceLeaf } from "obsidian";
+import { MarkdownView, Plugin, PluginSettingTab, App, Setting, TFile, WorkspaceLeaf } from "obsidian";
 import { ReactView, VIEW_TYPE } from "./view";
 import { parseChatNote } from "./utils/parseChatNote";
+import { InlineCommandSuggest } from "./editor/InlineCommandSuggest";
+
+export interface IPluginSettings {
+  tokenLimit: number;
+}
+
+const DEFAULT_SETTINGS: IPluginSettings = {
+  tokenLimit: 8192,
+};
+
+class ChatSettingTab extends PluginSettingTab {
+  constructor(app: App, private plugin: ReactPlugin) {
+    super(app, plugin);
+  }
+
+  display(): void {
+    const { containerEl } = this;
+    containerEl.empty();
+
+    new Setting(containerEl)
+      .setName("Token limit")
+      .setDesc("Maximum number of tokens allowed in the chat context window.")
+      .addText((text) =>
+        text
+          .setValue(String(this.plugin.settings.tokenLimit))
+          .onChange(async (value) => {
+            const parsed = parseInt(value, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+              this.plugin.settings.tokenLimit = parsed;
+              await this.plugin.saveSettings();
+              this.plugin.refreshView();
+            }
+          })
+      );
+  }
+}
 
 export default class ReactPlugin extends Plugin {
+  settings: IPluginSettings = DEFAULT_SETTINGS;
+
   async onload() {
-    this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf));
+    await this.loadSettings();
+    this.addSettingTab(new ChatSettingTab(this.app, this));
+    this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf, this));
+    this.registerEditorSuggest(new InlineCommandSuggest(this.app, this));
     this.addRibbonIcon("bot-message-square", "Open Chat", () => {
       this.activateView();
     });
@@ -100,6 +141,21 @@ export default class ReactPlugin extends Plugin {
     }
 
     return leaf;
+  }
+
+  async loadSettings(): Promise<void> {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings(): Promise<void> {
+    await this.saveData(this.settings);
+  }
+
+  refreshView(): void {
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
+    if (leaves.length > 0) {
+      (leaves[0].view as ReactView).renderApp();
+    }
   }
 
   async openChatFromFile(file: TFile): Promise<void> {

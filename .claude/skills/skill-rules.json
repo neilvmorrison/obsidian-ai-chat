@@ -1,0 +1,72 @@
+{
+  "architecture-reference": {
+    "type": "domain",
+    "enforcement": "suggest",
+    "priority": "high",
+    "filePaths": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/main.ts",
+      "src/view.ts",
+      "src/hooks/**",
+      "src/components/**",
+      "src/editor/**",
+      "src/utils/**",
+      "src/lib/**"
+    ],
+    "promptTriggers": {
+      "keywords": [
+        "component",
+        "hook",
+        "view",
+        "editor suggest",
+        "data flow",
+        "obsidian plugin",
+        "reactview",
+        "activateview",
+        "streamchat",
+        "useStreamChat",
+        "inlinecommand",
+        "savechat",
+        "parsechat",
+        "tab state",
+        "ollama"
+      ],
+      "intentPatterns": [
+        "(add|create|refactor|move|rename).*(component|hook|view|module|editor|plugin)",
+        "(change|update|modify).*data flow"
+      ]
+    }
+  },
+  "coding-standards": {
+    "type": "domain",
+    "enforcement": "suggest",
+    "priority": "high",
+    "filePaths": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "promptTriggers": {
+      "keywords": [
+        "typescript",
+        "interface",
+        "naming",
+        "convention",
+        "tailwind",
+        "css",
+        "memo",
+        "usecallback",
+        "usememo",
+        "react component",
+        "snake_case",
+        "camelcase",
+        "oac-",
+        "chat:"
+      ],
+      "intentPatterns": [
+        "(write|create|add|refactor).*(typescript|react|component|hook|style|css|utility)",
+        "(review|check).*(code|naming|convention|standard)"
+      ]
+    }
+  }
+}
