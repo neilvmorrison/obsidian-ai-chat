@@ -5,14 +5,9 @@ import {
   EditorSuggest,
   EditorSuggestContext,
   EditorSuggestTriggerInfo,
-  Modal,
   TFile,
 } from "obsidian";
-import { generateText } from "ai";
-import { ollama, DEFAULT_MODEL } from "@/lib/ollama";
-import type ReactPlugin from "@/main";
-
-type InlineCommandId = "generate" | "ask";
+import type { InlineCommandId, IPendingCommand } from "@/editor/inlinePromptExtension";
 
 interface IInlineCommand {
   id: InlineCommandId;
@@ -30,7 +25,10 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
   private storedStart: EditorPosition | null = null;
   private storedEnd: EditorPosition | null = null;
 
-  constructor(app: App, private plugin: ReactPlugin) {
+  constructor(
+    app: App,
+    private pendingRef: { current: IPendingCommand | null }
+  ) {
     super(app);
   }
 
@@ -73,81 +71,6 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
 
     editor.replaceRange("", start, end);
     const cursorPos = editor.getCursor();
-    new InlinePromptModal(this.app, item.id, editor, cursorPos, this.plugin).open();
-  }
-}
-
-class InlinePromptModal extends Modal {
-  private input!: HTMLInputElement;
-
-  constructor(
-    app: App,
-    private commandId: InlineCommandId,
-    private editor: Editor,
-    private cursorPos: EditorPosition,
-    private plugin: ReactPlugin,
-  ) {
-    super(app);
-  }
-
-  onOpen(): void {
-    const { contentEl } = this;
-    contentEl.empty();
-    contentEl.addClass("oac-prompt-modal");
-
-    const label = this.commandId === "generate" ? "Generate" : "Ask";
-    contentEl.createEl("h4", { text: `${label}: Enter your prompt` });
-
-    this.input = contentEl.createEl("input", {
-      type: "text",
-      placeholder: "Enter your prompt",
-      cls: "oac-prompt-modal__input",
-    });
-    this.input.focus();
-
-    this.input.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        this.submit();
-      }
-    });
-  }
-
-  private async submit(): Promise<void> {
-    const prompt = this.input.value.trim();
-    if (!prompt) return;
-    this.close();
-
-    if (this.commandId === "generate") {
-      await this.runGenerate(prompt);
-    } else {
-      await this.runAsk(prompt);
-    }
-  }
-
-  private async runGenerate(prompt: string): Promise<void> {
-    try {
-      const result = await generateText({
-        model: ollama(DEFAULT_MODEL),
-        prompt,
-      });
-      this.editor.replaceRange(result.text, this.cursorPos);
-    } catch {
-      // Silently fail if Ollama is unreachable
-    }
-  }
-
-  private async runAsk(prompt: string): Promise<void> {
-    const leaf = await this.plugin.activateView();
-    if (!leaf) return;
-    await leaf.setViewState({
-      type: leaf.view.getViewType(),
-      active: true,
-      state: { initialInput: prompt },
-    });
-  }
-
-  onClose(): void {
-    this.contentEl.empty();
+    this.pendingRef.current = { commandId: item.id, promptStartPos: cursorPos };
   }
 }

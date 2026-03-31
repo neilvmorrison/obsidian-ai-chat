@@ -20,7 +20,8 @@ src/
 │   ├── BotIcon.tsx           # SVG icon component
 │   └── EmptyState.tsx        # Empty chat placeholder
 ├── editor/
-│   └── InlineCommandSuggest.ts  # /generate and /ask slash commands in editor
+│   ├── InlineCommandSuggest.ts       # /generate and /ask slash commands in editor
+│   └── inlinePromptExtension.ts      # CM6 keymap + EnterHint ViewPlugin for inline prompt UX
 ├── hooks/
 │   ├── useStreamChat.ts      # Core AI streaming, model fetching, AbortController
 │   ├── useKeyboardShortcut.ts
@@ -62,8 +63,15 @@ Displays a progress bar showing token usage relative to the configured limit. Co
 
 ### `src/editor/InlineCommandSuggest.ts`
 Obsidian `EditorSuggest` implementation. Triggers on `/` in the editor. Two commands:
-- `/generate` — opens `InlinePromptModal`, calls `generateText()`, inserts result at cursor via `editor.replaceRange()`
-- `/ask` — opens `InlinePromptModal`, activates chat sidebar with pre-filled prompt
+- `/generate` — sets `pendingRef.current`; user types prompt inline then presses Enter to call `generateText()` and insert result
+- `/ask` — sets `pendingRef.current`; user types prompt inline then presses Enter to activate the chat sidebar with pre-filled prompt
+
+`pendingRef` is a plain mutable object (`{ current: IPendingCommand | null }`) created in `main.ts` and shared with `inlinePromptExtension.ts` via closure.
+
+### `src/editor/inlinePromptExtension.ts`
+CM6 extension factory (`createInlinePromptExtension`). Returns two extensions bundled together:
+1. **Keymap** — intercepts `Enter` (runs generation/chat) and `Escape` (cancels pending state) when `pendingRef.current` is set. On Enter: extracts the prompt from `promptStartPos` to cursor, replaces it with `"Generating…"` text, calls `generateText()` async, then replaces the placeholder with the result (or `""` on error).
+2. **EnterHintViewPlugin** — a CM6 `ViewPlugin` that renders a `<kbd>↵ Enter</kbd>` widget decoration at the cursor position while a command is pending. Auto-cancels the pending state if the cursor moves to a different line. Rebuilds decorations on every view update.
 
 ### `src/lib/ollama.ts`
 Single source of truth for Ollama config. Exports `OLLAMA_BASE_URL` (`http://localhost:11434`) and `DEFAULT_MODEL` (`llama3.2:latest`). Also exports the OpenAI-compat provider instance pointed at the local Ollama endpoint.
@@ -126,6 +134,7 @@ React context providing Obsidian's `App` instance to any component that needs va
 | `src/hooks/useStreamChat.ts` | Core AI hook — streaming via Vercel AI SDK, model fetching, AbortController, rAF batching |
 | `src/lib/ollama.ts` | Ollama provider config — base URL and default model defined here |
 | `src/editor/InlineCommandSuggest.ts` | EditorSuggest — `/generate` (inline insertion) and `/ask` (open chat) slash commands |
+| `src/editor/inlinePromptExtension.ts` | CM6 keymap + EnterHint ViewPlugin — inline prompt UX; exports `IPendingCommand` and `InlineCommandId` |
 | `src/utils/saveChat.ts` | Chat serialization — YAML frontmatter + human-readable body + JSON data block |
 | `src/utils/parseChatNote.ts` | Chat deserialization — extracts model from frontmatter, messages from JSON block |
 | `esbuild.config.mjs` | Build pipeline — Tailwind CLI + esbuild; `@/*` path alias; external packages list |

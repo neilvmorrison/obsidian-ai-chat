@@ -2,6 +2,7 @@ import { MarkdownView, Plugin, PluginSettingTab, App, Setting, TFile, WorkspaceL
 import { ReactView, VIEW_TYPE } from "./view";
 import { parseChatNote } from "./utils/parseChatNote";
 import { InlineCommandSuggest } from "./editor/InlineCommandSuggest";
+import { createInlinePromptExtension, type IPendingCommand } from "./editor/inlinePromptExtension";
 
 export interface IPluginSettings {
   tokenLimit: number;
@@ -45,7 +46,10 @@ export default class ReactPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new ChatSettingTab(this.app, this));
     this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf, this));
-    this.registerEditorSuggest(new InlineCommandSuggest(this.app, this));
+
+    const pendingRef: { current: IPendingCommand | null } = { current: null };
+    this.registerEditorSuggest(new InlineCommandSuggest(this.app, pendingRef));
+    this.registerEditorExtension(createInlinePromptExtension(pendingRef, this));
     this.addRibbonIcon("bot-message-square", "Open Chat", () => {
       this.activateView();
     });
