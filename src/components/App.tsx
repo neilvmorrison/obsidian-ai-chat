@@ -5,19 +5,25 @@ import { BotIcon } from "@/components/BotIcon";
 import { MessageList } from "@/components/MessageList";
 import { TabBar } from "@/components/TabBar";
 import { TokenUsageBar } from "@/components/TokenUsageBar";
+import { SelectionToolbar } from "@/components/SelectionToolbar";
+import { AskAIModal } from "@/components/AskAIModal";
 import { useStreamChat, DEFAULT_MODEL, type ChatMessage } from "@/hooks/useStreamChat";
+import { useTextSelection } from "@/hooks/useTextSelection";
 import { generateTitle } from "@/utils/generateTitle";
+import { generate_context_summary } from "@/utils/generate_context_summary";
 
-interface Tab {
+interface ITab {
   id: string;
   title: string | null;
   messages: ChatMessage[];
   input: string;
   model: string;
   tokenUsage: number;
+  autoSubmit?: boolean;
+  pendingImage: string | null;
 }
 
-function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): Tab {
+function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): ITab {
   return {
     id: crypto.randomUUID(),
     title: null,
@@ -25,24 +31,29 @@ function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL):
     input: "",
     model,
     tokenUsage: 0,
+    pendingImage: null,
   };
 }
 
-export interface AppProps {
+export interface IAppProps {
   initialMessages?: ChatMessage[];
   initialModel?: string;
   initialInput?: string;
   tokenLimit?: number;
 }
 
-export function App({ initialMessages, initialModel, initialInput, tokenLimit = 8192 }: AppProps) {
-  const [tabs, setTabs] = useState<Tab[]>(() => [
+export function App({ initialMessages, initialModel, initialInput, tokenLimit = 8192 }: IAppProps) {
+  const [tabs, setTabs] = useState<ITab[]>(() => [
     createTab(initialMessages ?? [], initialModel ?? DEFAULT_MODEL),
   ]);
   const [activeTabId, setActiveTabId] = useState(() => tabs[0].id);
+  const [askAISelectedText, setAskAISelectedText] = useState<string | null>(null);
   const stopRef = useRef<() => void>(() => {});
+  const messageListRef = useRef<HTMLDivElement>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId)!;
+
+  const selection = useTextSelection(messageListRef);
 
   const setMessages = useCallback(
     (updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
@@ -78,6 +89,13 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     [activeTabId]
   );
 
+  const setPendingImage = useCallback(
+    (value: string | null) => {
+      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, pendingImage: value } : t)));
+    },
+    [activeTabId]
+  );
+
   const { handleSubmit, isLoading, stop, changeModel, availableModels } = useStreamChat({
     messages: activeTab.messages,
     setMessages,
@@ -86,6 +104,8 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     model: activeTab.model,
     setModel,
     setTokenUsage,
+    pendingImage: activeTab.pendingImage,
+    setPendingImage,
   });
 
   stopRef.current = stop;
@@ -135,7 +155,6 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     }
   }, [initialInput, activeTab.messages.length, setInput]);
 
-  // Auto-title tab after first assistant response
   const prevIsLoading = useRef(isLoading);
   useEffect(() => {
     if (prevIsLoading.current && !isLoading && activeTab.title === null) {
@@ -150,6 +169,52 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     prevIsLoading.current = isLoading;
   }, [isLoading, activeTab, activeTabId]);
 
+  useEffect(() => {
+    if (!activeTab.autoSubmit || isLoading) return;
+    setTabs((prev) =>
+      prev.map((t) => (t.id === activeTabId ? { ...t, autoSubmit: false } : t))
+    );
+    handleSubmit();
+  }, [activeTab.autoSubmit, activeTabId, isLoading, handleSubmit]);
+
+  const handleAskAI = useCallback(() => {
+    if (!selection) return;
+    window.getSelection()?.removeAllRanges();
+    setAskAISelectedText(selection.text);
+  }, [selection]);
+
+  const handleNewChat = useCallback(async () => {
+    if (!selection) return;
+    const { text } = selection;
+    window.getSelection()?.removeAllRanges();
+    const summary = await generate_context_summary(activeTab.messages, activeTab.model, text);
+    const systemMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "system",
+      content: summary,
+    };
+    const tab: ITab = {
+      ...createTab([systemMsg], activeTab.model),
+      input: text,
+      autoSubmit: true,
+    };
+    setTabs((prev) => [...prev, tab]);
+    setActiveTabId(tab.id);
+  }, [selection, activeTab.messages, activeTab.model]);
+
+  const handleContinueInNewChat = useCallback(
+    (messages: ChatMessage[]) => {
+      setAskAISelectedText(null);
+      const tab = createTab(messages, activeTab.model);
+      setTabs((prev) => [...prev, tab]);
+      setActiveTabId(tab.id);
+    },
+    [activeTab.model]
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setAskAISelectedText(null);
+  }, []);
 
   return (
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground chat:relative">
@@ -163,7 +228,7 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
           </div>
         </EmptyState>
       ) : (
-        <MessageList messages={activeTab.messages} isLoading={isLoading} />
+        <MessageList ref={messageListRef} messages={activeTab.messages} isLoading={isLoading} />
       )}
       {activeTab.messages.length > 0 && (
         <TokenUsageBar tokenUsage={activeTab.tokenUsage} tokenLimit={tokenLimit} />
@@ -177,7 +242,27 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
         model={activeTab.model}
         onModelChange={changeModel}
         availableModels={availableModels}
+        selectedImage={activeTab.pendingImage}
+        onImageSelect={setPendingImage}
       />
+
+      {selection && !askAISelectedText && (
+        <SelectionToolbar
+          rect={selection.rect}
+          onAskAI={handleAskAI}
+          onNewChat={handleNewChat}
+        />
+      )}
+
+      {askAISelectedText && (
+        <AskAIModal
+          selectedText={askAISelectedText}
+          contextMessages={activeTab.messages}
+          model={activeTab.model}
+          onClose={handleCloseModal}
+          onContinueInNewChat={handleContinueInNewChat}
+        />
+      )}
     </div>
   );
 }

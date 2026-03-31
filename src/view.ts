@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { createRoot, Root } from "react-dom/client";
 import { createElement } from "react";
-import { App, type AppProps } from "./components/App";
+import { App, type IAppProps } from "./components/App";
 import { ObsidianAppProvider } from "./contexts/ObsidianAppContext";
 import type { ChatMessage } from "./hooks/useStreamChat";
 import type ReactPlugin from "./main";
@@ -44,7 +44,7 @@ export class ReactView extends ItemView {
   }
 
   renderApp() {
-    const props: AppProps = {
+    const props: IAppProps = {
       initialMessages: this.chatState.initialMessages,
       initialModel: this.chatState.initialModel,
       initialInput: this.chatState.initialInput,

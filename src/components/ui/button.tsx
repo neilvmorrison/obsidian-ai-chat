@@ -4,7 +4,7 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "chat:inline-flex chat:items-center chat:justify-center chat:gap-2 chat:whitespace-nowrap chat:rounded-md chat:text-sm chat:font-medium chat:transition-colors focus-visible:chat:outline-none focus-visible:chat:ring-1 focus-visible:chat:ring-ring disabled:chat:pointer-events-none disabled:chat:opacity-50 [&_svg]:chat:pointer-events-none [&_svg]:chat:size-4 [&_svg]:chat:shrink-0",
+  "chat:cursor-pointer chat:inline-flex chat:items-center chat:justify-center chat:gap-2 chat:whitespace-nowrap chat:rounded-md chat:text-sm chat:font-medium chat:transition-colors focus-visible:chat:outline-none focus-visible:chat:ring-1 focus-visible:chat:ring-ring disabled:chat:pointer-events-none disabled:chat:opacity-50 [&_svg]:chat:pointer-events-none [&_svg]:chat:size-4 [&_svg]:chat:shrink-0",
   {
     variants: {
       variant: {
@@ -16,8 +16,7 @@ const buttonVariants = cva(
           "chat:border chat:border-border chat:bg-background chat:shadow-sm hover:chat:bg-muted hover:chat:text-foreground",
         secondary:
           "chat:bg-secondary chat:text-secondary-foreground chat:shadow-sm hover:chat:bg-secondary/80",
-        ghost:
-          "hover:chat:bg-muted hover:chat:text-foreground",
+        ghost: "hover:chat:bg-muted hover:chat:text-foreground",
         link: "chat:text-primary chat:underline-offset-4 hover:chat:underline",
       },
       size: {
@@ -31,11 +30,12 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
@@ -50,7 +50,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  }
+  },
 );
 Button.displayName = "Button";
 

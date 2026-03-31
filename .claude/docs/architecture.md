@@ -16,11 +16,14 @@ src/
 │   ├── TokenUsageBar.tsx     # Token usage progress bar with color thresholds
 │   ├── ModelSelector.tsx     # Dropdown for selecting Ollama model
 │   ├── SaveChatButton.tsx    # Saves current tab to Obsidian vault
+│   ├── AssistantMessage.tsx  # Parses think-tag segments; delegates to ThinkingBlock or MarkdownMessage
+│   ├── ThinkingBlock.tsx     # Collapsible <details> panel for <think>...</think> content
 │   ├── MermaidBlock.tsx      # Lazy mermaid diagram renderer
 │   ├── BotIcon.tsx           # SVG icon component
 │   └── EmptyState.tsx        # Empty chat placeholder
 ├── editor/
-│   └── InlineCommandSuggest.ts  # /generate and /ask slash commands in editor
+│   ├── InlineCommandSuggest.ts       # /generate and /ask slash commands in editor
+│   └── inlinePromptExtension.ts      # CM6 keymap + EnterHint ViewPlugin for inline prompt UX
 ├── hooks/
 │   ├── useStreamChat.ts      # Core AI streaming, model fetching, AbortController
 │   ├── useKeyboardShortcut.ts
@@ -33,7 +36,8 @@ src/
 ├── utils/
 │   ├── saveChat.ts           # Serialize chat to vault Markdown note
 │   ├── parseChatNote.ts      # Parse saved chat note back to messages
-│   └── generateTitle.ts      # AI-generated tab title after first response
+│   ├── generateTitle.ts      # AI-generated tab title after first response
+│   └── parse_thinking_content.ts  # Split raw content string into text/thinking IContentSegment[]
 ├── main.ts                   # Plugin entry point (ReactPlugin extends Plugin)
 ├── view.ts                   # ReactView (ItemView) — mounts React root
 └── styles.css                # Tailwind CSS source input
@@ -57,13 +61,29 @@ Root React component. Owns all tab state: `tabs[]` and `activeTabId`. Each tab s
 ### `src/hooks/useStreamChat.ts`
 Core AI hook. Streams responses via Vercel AI SDK `streamText()`. Fetches available models from Ollama REST API. Manages `AbortController` for cancellation. Batches streaming state updates via `requestAnimationFrame`. Filters out `role === "system"` messages before building Ollama requests (system messages are UI-only). After each stream completes, awaits `result.usage` and calls the caller-supplied `setTokenUsage` with `inputTokens + outputTokens`.
 
+### `src/utils/parse_thinking_content.ts`
+Parses a raw assistant message string into `IContentSegment[]` — either `{ type: "text" }` or `{ type: "thinking", isStreaming }`. Detects unclosed `<think>` tags during streaming and marks them as `isStreaming: true`. Empty segments are dropped.
+
+### `src/components/AssistantMessage.tsx`
+Wrapper rendered for all assistant messages. Calls `parse_thinking_content` via `useMemo` and maps each segment to either `<ThinkingBlock>` (for `type: "thinking"`) or `<MarkdownMessage>` (for `type: "text"`). Wrapped in `memo`.
+
+### `src/components/ThinkingBlock.tsx`
+Collapsible `<details>` element for `<think>` content. Manages `isOpen` state that auto-opens when `isStreaming` is `true` and auto-closes when streaming ends; user can toggle freely at any time. Renders thinking content via `<MarkdownMessage>`.
+
 ### `src/components/TokenUsageBar.tsx`
 Displays a progress bar showing token usage relative to the configured limit. Color thresholds: green below 50%, orange 50–75%, red above 75%. Renders token counts as formatted strings (e.g. `6.4k/8k`). Only shown when the active tab has messages.
 
 ### `src/editor/InlineCommandSuggest.ts`
 Obsidian `EditorSuggest` implementation. Triggers on `/` in the editor. Two commands:
-- `/generate` — opens `InlinePromptModal`, calls `generateText()`, inserts result at cursor via `editor.replaceRange()`
-- `/ask` — opens `InlinePromptModal`, activates chat sidebar with pre-filled prompt
+- `/generate` — sets `pendingRef.current`; user types prompt inline then presses Enter to call `generateText()` and insert result
+- `/ask` — sets `pendingRef.current`; user types prompt inline then presses Enter to activate the chat sidebar with pre-filled prompt
+
+`pendingRef` is a plain mutable object (`{ current: IPendingCommand | null }`) created in `main.ts` and shared with `inlinePromptExtension.ts` via closure.
+
+### `src/editor/inlinePromptExtension.ts`
+CM6 extension factory (`createInlinePromptExtension`). Returns two extensions bundled together:
+1. **Keymap** — intercepts `Enter` (runs generation/chat) and `Escape` (cancels pending state) when `pendingRef.current` is set. On Enter: extracts the prompt from `promptStartPos` to cursor, replaces it with `"Generating…"` text, calls `generateText()` async, then replaces the placeholder with the result (or `""` on error).
+2. **EnterHintViewPlugin** — a CM6 `ViewPlugin` that renders a `<kbd>↵ Enter</kbd>` widget decoration at the cursor position while a command is pending. Auto-cancels the pending state if the cursor moves to a different line. Rebuilds decorations on every view update.
 
 ### `src/lib/ollama.ts`
 Single source of truth for Ollama config. Exports `OLLAMA_BASE_URL` (`http://localhost:11434`) and `DEFAULT_MODEL` (`llama3.2:latest`). Also exports the OpenAI-compat provider instance pointed at the local Ollama endpoint.
@@ -126,6 +146,7 @@ React context providing Obsidian's `App` instance to any component that needs va
 | `src/hooks/useStreamChat.ts` | Core AI hook — streaming via Vercel AI SDK, model fetching, AbortController, rAF batching |
 | `src/lib/ollama.ts` | Ollama provider config — base URL and default model defined here |
 | `src/editor/InlineCommandSuggest.ts` | EditorSuggest — `/generate` (inline insertion) and `/ask` (open chat) slash commands |
+| `src/editor/inlinePromptExtension.ts` | CM6 keymap + EnterHint ViewPlugin — inline prompt UX; exports `IPendingCommand` and `InlineCommandId` |
 | `src/utils/saveChat.ts` | Chat serialization — YAML frontmatter + human-readable body + JSON data block |
 | `src/utils/parseChatNote.ts` | Chat deserialization — extracts model from frontmatter, messages from JSON block |
 | `esbuild.config.mjs` | Build pipeline — Tailwind CLI + esbuild; `@/*` path alias; external packages list |
