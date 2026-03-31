@@ -53,51 +53,53 @@ export function PromptInput({
         className={cn(
           "chat:relative chat:flex chat:flex-col chat:gap-1",
           "chat:rounded-lg chat:border chat:border-border chat:bg-muted/50",
-          "chat:p-2 chat:pr-12",
+          "chat:p-2",
         )}
       >
-        <Textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onInput={handleInput}
-          placeholder={placeholder}
-          rows={1}
-          className={cn(
-            "chat:min-h-9 chat:max-h-50 chat:resize-none",
-            "chat:border-0 chat:bg-transparent chat:shadow-none",
-            "chat:p-1 chat:text-sm",
-            "focus-visible:chat:ring-0",
-          )}
-        />
+        <div className="chat:w-full chat:flex chat:items-end chat:justify-between chat:gap-12">
+          <Textarea
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onInput={handleInput}
+            placeholder={placeholder}
+            rows={1}
+            className={cn(
+              "chat:min-h-9 chat:max-h-50 chat:resize-none chat:mb-2",
+              "chat:border-0 chat:bg-transparent chat:shadow-none",
+              "chat:p-1 chat:text-sm",
+              "focus-visible:chat:ring-0",
+            )}
+          />
+          <div className="chat:w-[48px]">
+            {isLoading ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={onStop}
+                className="chat:rounded-full"
+              >
+                <Square className="chat:fill-current" />
+              </Button>
+            ) : (
+              <Button
+                size="icon"
+                onClick={onSubmit}
+                disabled={!value.trim()}
+                className="chat:rounded-full"
+              >
+                <ArrowUp className="h-8 w-8" />
+              </Button>
+            )}
+          </div>
+        </div>
         <div className="chat:flex chat:items-center">
           <ModelSelector
             model={model}
             onModelChange={onModelChange}
             availableModels={availableModels}
           />
-        </div>
-        <div className="chat:absolute chat:bottom-2 chat:right-2">
-          {isLoading ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={onStop}
-              className="chat:rounded-full"
-            >
-              <Square className="chat:fill-current" />
-            </Button>
-          ) : (
-            <Button
-              size="icon"
-              onClick={onSubmit}
-              disabled={!value.trim()}
-              className="chat:rounded-full"
-            >
-              <ArrowUp className="h-8 w-8" />
-            </Button>
-          )}
         </div>
       </div>
     </div>

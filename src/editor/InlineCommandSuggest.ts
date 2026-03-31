@@ -69,8 +69,7 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
     const end = this.storedEnd;
     if (!editor || !start || !end) return;
 
+    this.pendingRef.current = { commandId: item.id, promptStartPos: start };
     editor.replaceRange("", start, end);
-    const cursorPos = editor.getCursor();
-    this.pendingRef.current = { commandId: item.id, promptStartPos: cursorPos };
   }
 }
