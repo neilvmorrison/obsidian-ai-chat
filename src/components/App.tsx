@@ -161,7 +161,7 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
       const hasAssistant = activeTab.messages.some((m) => m.role === "assistant" && m.content);
       if (hasAssistant) {
         const tabId = activeTabId;
-        generateTitle(activeTab.messages, activeTab.model).then((title) => {
+        generateTitle(activeTab.messages).then((title) => {
           setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, title } : t)));
         });
       }

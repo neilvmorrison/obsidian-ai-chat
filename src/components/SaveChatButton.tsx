@@ -19,7 +19,7 @@ export function SaveChatButton({ messages, model }: SaveChatButtonProps) {
     if (state !== "idle") return;
     setState("saving");
     try {
-      const title = await generateTitle(messages, model);
+      const title = await generateTitle(messages);
       await saveChat(app, messages, model, title);
       setState("saved");
       setTimeout(() => setState("idle"), 2000);

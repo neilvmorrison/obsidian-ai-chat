@@ -2,7 +2,7 @@ import { generateText } from "ai";
 import { ollama, DEFAULT_MODEL } from "@/lib/ollama";
 import type { ChatMessage } from "@/hooks/useStreamChat";
 
-export async function generateTitle(messages: ChatMessage[], model: string): Promise<string> {
+export async function generateTitle(messages: ChatMessage[]): Promise<string> {
   try {
     const conversationMessages = messages.filter((m) => m.role !== "system");
     const condensed = conversationMessages
@@ -11,7 +11,7 @@ export async function generateTitle(messages: ChatMessage[], model: string): Pro
       .join("\n");
 
     const { text } = await generateText({
-      model: ollama(model || DEFAULT_MODEL),
+      model: ollama(DEFAULT_MODEL),
       system:
         "Generate a short title (max 6 words) summarizing this conversation. Reply with ONLY the title, no quotes, no punctuation.",
       prompt: condensed,
