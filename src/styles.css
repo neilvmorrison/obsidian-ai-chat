@@ -737,9 +737,9 @@
 
 /* ── Ask AI modal ────────────────────────────────────────── */
 .oac-ask-modal-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 10000;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;

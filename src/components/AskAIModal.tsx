@@ -1,5 +1,4 @@
 import { memo, useEffect, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { X, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownMessage } from "@/components/MarkdownMessage";
@@ -74,7 +73,7 @@ export const AskAIModal = memo(function AskAIModal({
     [onClose]
   );
 
-  return createPortal(
+  return (
     <div className="oac-ask-modal-overlay" onMouseDown={handleOverlayMouseDown}>
       <div className="oac-ask-modal">
         <div className="oac-ask-modal__header">
@@ -119,7 +118,6 @@ export const AskAIModal = memo(function AskAIModal({
           </div>
         )}
       </div>
-    </div>,
-    document.body
+    </div>
   );
 });

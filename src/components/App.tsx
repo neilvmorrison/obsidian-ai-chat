@@ -168,12 +168,14 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
 
   const handleAskAI = useCallback(() => {
     if (!selection) return;
+    window.getSelection()?.removeAllRanges();
     setAskAISelectedText(selection.text);
   }, [selection]);
 
   const handleNewChat = useCallback(async () => {
     if (!selection) return;
     const { text } = selection;
+    window.getSelection()?.removeAllRanges();
     const summary = await generate_context_summary(activeTab.messages, activeTab.model, text);
     const systemMsg: ChatMessage = {
       id: crypto.randomUUID(),
