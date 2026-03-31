@@ -229,6 +229,15 @@
   border-bottom-right-radius: var(--oac-space-1);
 }
 
+.oac-message__image {
+  display: block;
+  max-width: 240px;
+  max-height: 180px;
+  border-radius: var(--oac-space-2);
+  margin-bottom: var(--oac-space-2);
+  object-fit: cover;
+}
+
 .oac-message--assistant {
   align-self: flex-start;
   background: var(--background-secondary);

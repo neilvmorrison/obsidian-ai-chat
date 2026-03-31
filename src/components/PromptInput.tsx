@@ -1,11 +1,11 @@
-import { useRef, type KeyboardEvent } from "react";
+import { useRef, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Square, UploadIcon } from "lucide-react";
+import { ArrowUp, Square, UploadIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSelector } from "@/components/ModelSelector";
 
-interface PromptInputProps {
+interface IPromptInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
@@ -15,6 +15,8 @@ interface PromptInputProps {
   model: string;
   onModelChange: (model: string) => void;
   availableModels: string[];
+  selectedImage?: string | null;
+  onImageSelect: (dataUrl: string | null) => void;
 }
 
 export function PromptInput({
@@ -27,25 +29,43 @@ export function PromptInput({
   model,
   onModelChange,
   availableModels,
-}: PromptInputProps) {
+  selectedImage,
+  onImageSelect,
+}: IPromptInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (value.trim() && !isLoading) {
         onSubmit();
       }
     }
-  };
+  }, [value, isLoading, onSubmit]);
 
-  const handleInput = () => {
+  const handleInput = useCallback(() => {
     const el = textareaRef.current;
     if (el) {
       el.style.height = "auto";
       el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
     }
-  };
+  }, []);
+
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      onImageSelect(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }, [onImageSelect]);
+
+  const handleUploadClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   return (
     <div className="chat:border-t chat:border-border chat:bg-background chat:p-3">
@@ -56,6 +76,22 @@ export function PromptInput({
           "chat:p-2",
         )}
       >
+        {selectedImage && (
+          <div className="chat:relative chat:w-fit chat:mb-1">
+            <img
+              src={selectedImage}
+              alt="Selected"
+              className="chat:h-20 chat:w-20 chat:rounded-md chat:object-cover"
+            />
+            <button
+              onClick={() => onImageSelect(null)}
+              className="chat:absolute chat:-top-1.5 chat:-right-1.5 chat:bg-background chat:border chat:border-border chat:rounded-full chat:p-0.5 chat:cursor-pointer"
+              aria-label="Remove image"
+            >
+              <X className="chat:size-3" />
+            </button>
+          </div>
+        )}
         <div className="chat:w-full chat:flex chat:items-end chat:justify-between chat:gap-12">
           <Textarea
             ref={textareaRef}
@@ -95,7 +131,20 @@ export function PromptInput({
           </div>
         </div>
         <div className="chat:flex chat:items-center chat:gap-2">
-          <Button size="icon" variant="ghost" className="chat:rounded-full">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="chat:hidden"
+          />
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={handleUploadClick}
+            className="chat:rounded-full"
+            aria-label="Upload image"
+          >
             <UploadIcon className="chat:size-3" />
           </Button>
           <ModelSelector

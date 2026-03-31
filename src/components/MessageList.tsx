@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, memo } from "react";
 import type { ChatMessage } from "@/hooks/useStreamChat";
-import { MarkdownMessage } from "./MarkdownMessage";
+import { AssistantMessage } from "./AssistantMessage";
+import { format_timestamp } from "@/utils/format_timestamp";
 
 interface IMessageListProps {
   messages: ChatMessage[];
@@ -50,10 +51,25 @@ export const MessageList = memo(
               className={`oac-message oac-message--${msg.role}`}
             >
               {msg.role === "user" ? (
-                msg.content
+                <>
+                  {msg.imageData && (
+                    <img
+                      src={msg.imageData}
+                      alt="Uploaded"
+                      className="oac-message__image"
+                    />
+                  )}
+                  {msg.content}
+                </>
               ) : (
-                <MarkdownMessage content={msg.content} />
+                <AssistantMessage
+                  content={msg.content}
+                  thinkingDuration={msg.thinkingDuration}
+                />
               )}
+              <span className="oac-message__timestamp">
+                {msg.timestamp ? format_timestamp(msg.timestamp) : null}
+              </span>
             </div>
           )
         )}

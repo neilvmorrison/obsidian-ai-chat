@@ -20,6 +20,7 @@ interface ITab {
   model: string;
   tokenUsage: number;
   autoSubmit?: boolean;
+  pendingImage: string | null;
 }
 
 function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): ITab {
@@ -30,6 +31,7 @@ function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL):
     input: "",
     model,
     tokenUsage: 0,
+    pendingImage: null,
   };
 }
 
@@ -87,6 +89,13 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     [activeTabId]
   );
 
+  const setPendingImage = useCallback(
+    (value: string | null) => {
+      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, pendingImage: value } : t)));
+    },
+    [activeTabId]
+  );
+
   const { handleSubmit, isLoading, stop, changeModel, availableModels } = useStreamChat({
     messages: activeTab.messages,
     setMessages,
@@ -95,6 +104,8 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     model: activeTab.model,
     setModel,
     setTokenUsage,
+    pendingImage: activeTab.pendingImage,
+    setPendingImage,
   });
 
   stopRef.current = stop;
@@ -231,6 +242,8 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
         model={activeTab.model}
         onModelChange={changeModel}
         availableModels={availableModels}
+        selectedImage={activeTab.pendingImage}
+        onImageSelect={setPendingImage}
       />
 
       {selection && !askAISelectedText && (
