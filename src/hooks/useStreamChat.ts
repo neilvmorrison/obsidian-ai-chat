@@ -98,8 +98,10 @@ export function useStreamChat({ messages, setMessages, input, setInput, model, s
     abortRef.current = controller;
 
     try {
+      const systemMsg = history.find((m) => m.role === "system");
       const result = streamText({
         model: ollama(model),
+        ...(systemMsg ? { system: systemMsg.content } : {}),
         messages: history
           .filter((m) => m.role !== "system")
           .map((m): ModelMessage => {

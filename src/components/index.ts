@@ -1,5 +1,6 @@
 export * from "./ui";
 export * from "./App";
+export * from "./NoteContextBanner";
 export * from "./AskAIModal";
 export * from "./BotIcon";
 export * from "./EmptyState";

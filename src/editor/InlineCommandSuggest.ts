@@ -11,6 +11,7 @@ import type {
   InlineCommandId,
   IPendingCommand,
 } from "@/editor/inlinePromptExtension";
+import type ReactPlugin from "@/main";
 
 interface IInlineCommand {
   id: InlineCommandId;
@@ -25,9 +26,9 @@ const COMMANDS: IInlineCommand[] = [
     description: " Generate text inline at cursor",
   },
   {
-    id: "ask",
-    label: "/ask",
-    description: " Open chat with your prompt pre-filled",
+    id: "chat",
+    label: "/chat",
+    description: " Open a new chat thread with note context",
   },
 ];
 
@@ -39,6 +40,7 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
   constructor(
     app: App,
     private pendingRef: { current: IPendingCommand | null },
+    private plugin: ReactPlugin,
   ) {
     super(app);
   }
@@ -93,7 +95,26 @@ export class InlineCommandSuggest extends EditorSuggest<IInlineCommand> {
     const end = this.storedEnd;
     if (!editor || !start || !end) return;
 
-    this.pendingRef.current = { commandId: item.id, promptStartPos: start };
     editor.replaceRange("", start, end);
+
+    if (item.id === "chat") {
+      const noteContent = editor.getValue();
+      const cursor = editor.getCursor();
+      const lines = noteContent.split("\n");
+      let cursorOffset = cursor.ch;
+      for (let i = 0; i < cursor.line; i++) {
+        cursorOffset += lines[i].length + 1;
+      }
+      const file = this.plugin.app.workspace.getActiveFile();
+      this.plugin.openChatWithNoteContext(
+        noteContent,
+        cursorOffset,
+        file?.basename ?? "",
+        file?.path ?? "",
+      );
+      return;
+    }
+
+    this.pendingRef.current = { commandId: item.id, promptStartPos: start };
   }
 }

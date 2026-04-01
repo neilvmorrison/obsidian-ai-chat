@@ -3,6 +3,7 @@ import { PromptInput } from "@/components/PromptInput";
 import { EmptyState } from "@/components/EmptyState";
 import { BotIcon } from "@/components/BotIcon";
 import { MessageList } from "@/components/MessageList";
+import { NoteContextBanner } from "@/components/NoteContextBanner";
 import { TabBar } from "@/components/TabBar";
 import { TokenUsageBar } from "@/components/TokenUsageBar";
 import { SelectionToolbar } from "@/components/SelectionToolbar";
@@ -11,6 +12,13 @@ import { useStreamChat, DEFAULT_MODEL, type ChatMessage } from "@/hooks/useStrea
 import { useTextSelection } from "@/hooks/useTextSelection";
 import { generateTitle } from "@/utils/generateTitle";
 import { generate_context_summary } from "@/utils/generate_context_summary";
+import { build_chat_context } from "@/utils/build_inline_context";
+import type { INoteContext } from "@/view";
+
+interface ITabNoteContext {
+  filename: string;
+  filePath: string;
+}
 
 interface ITab {
   id: string;
@@ -21,6 +29,7 @@ interface ITab {
   tokenUsage: number;
   autoSubmit?: boolean;
   pendingImage: string | null;
+  noteContext?: ITabNoteContext;
 }
 
 function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): ITab {
@@ -39,10 +48,11 @@ export interface IAppProps {
   initialMessages?: ChatMessage[];
   initialModel?: string;
   initialInput?: string;
+  noteContext?: INoteContext;
   tokenLimit?: number;
 }
 
-export function App({ initialMessages, initialModel, initialInput, tokenLimit = 8192 }: IAppProps) {
+export function App({ initialMessages, initialModel, initialInput, noteContext, tokenLimit = 8192 }: IAppProps) {
   const [tabs, setTabs] = useState<ITab[]>(() => [
     createTab(initialMessages ?? [], initialModel ?? DEFAULT_MODEL),
   ]);
@@ -155,6 +165,28 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     }
   }, [initialInput, activeTab.messages.length, setInput]);
 
+  const prevNoteContextKey = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!noteContext || noteContext.key === prevNoteContextKey.current) return;
+    prevNoteContextKey.current = noteContext.key;
+    const systemContent = build_chat_context(
+      noteContext.noteContent,
+      noteContext.cursorOffset,
+      noteContext.filename,
+    );
+    const systemMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "system",
+      content: systemContent,
+    };
+    const tab: ITab = {
+      ...createTab([systemMsg], DEFAULT_MODEL),
+      noteContext: { filename: noteContext.filename, filePath: noteContext.filePath },
+    };
+    setTabs((prev) => [...prev, tab]);
+    setActiveTabId(tab.id);
+  }, [noteContext]);
+
   const prevIsLoading = useRef(isLoading);
   useEffect(() => {
     if (prevIsLoading.current && !isLoading && activeTab.title === null) {
@@ -220,7 +252,13 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground chat:relative">
       <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} onClose={closeTab} />
 
-      {activeTab.messages.length === 0 ? (
+      {activeTab.noteContext && (
+        <NoteContextBanner
+          filename={activeTab.noteContext.filename}
+          filePath={activeTab.noteContext.filePath}
+        />
+      )}
+      {activeTab.messages.filter((m) => m.role !== "system").length === 0 ? (
         <EmptyState>
           <div className="chat:flex chat:flex-col chat:gap-2 chat:items-center chat:justify-center">
             <BotIcon />
@@ -230,7 +268,7 @@ export function App({ initialMessages, initialModel, initialInput, tokenLimit = 
       ) : (
         <MessageList ref={messageListRef} messages={activeTab.messages} isLoading={isLoading} />
       )}
-      {activeTab.messages.length > 0 && (
+      {activeTab.messages.filter((m) => m.role !== "system").length > 0 && (
         <TokenUsageBar tokenUsage={activeTab.tokenUsage} tokenLimit={tokenLimit} />
       )}
       <PromptInput

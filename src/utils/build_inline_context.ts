@@ -60,16 +60,11 @@ function build_section_digest(sections: ISection[], currentIdx: number): string 
     .join("\n\n");
 }
 
-export function build_inline_context(
+function build_note_context_parts(
   noteContent: string,
   cursorOffset: number,
-  filename: string
-): string {
+): string[] {
   const parts: string[] = [];
-
-  if (filename.length > 0) {
-    parts.push(`You are writing inline in an Obsidian note titled "${filename}".`);
-  }
 
   if (noteContent.length > 0 && HEADING_RE.test(noteContent)) {
     const sections = parse_sections(noteContent);
@@ -81,13 +76,47 @@ export function build_inline_context(
 
   if (cursorOffset > 0 && noteContent.length > 0) {
     const windowStart = Math.max(0, cursorOffset - PROXIMITY_WINDOW);
-    const window = noteContent.slice(windowStart, cursorOffset).trim();
-    if (window.length > 0) {
-      parts.push(window);
+    const proximityWindow = noteContent.slice(windowStart, cursorOffset).trim();
+    if (proximityWindow.length > 0) {
+      parts.push(proximityWindow);
     }
   }
 
+  return parts;
+}
+
+export function build_inline_context(
+  noteContent: string,
+  cursorOffset: number,
+  filename: string
+): string {
+  const parts: string[] = [];
+
+  if (filename.length > 0) {
+    parts.push(`You are writing inline in an Obsidian note titled "${filename}".`);
+  }
+
+  parts.push(...build_note_context_parts(noteContent, cursorOffset));
   parts.push("Continue writing inline, matching the tone and style of the existing content.");
+
+  return parts.join("\n\n");
+}
+
+export function build_chat_context(
+  noteContent: string,
+  cursorOffset: number,
+  filename: string
+): string {
+  const parts: string[] = [];
+
+  if (filename.length > 0) {
+    parts.push(`You are a helpful assistant. The user is working in an Obsidian note titled "${filename}".`);
+  } else {
+    parts.push("You are a helpful assistant. The user is working in an Obsidian note.");
+  }
+
+  parts.push(...build_note_context_parts(noteContent, cursorOffset));
+  parts.push("Use this note context to answer the user's questions and provide assistance.");
 
   return parts.join("\n\n");
 }

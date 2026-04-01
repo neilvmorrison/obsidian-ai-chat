@@ -14,7 +14,7 @@ import { ollama, DEFAULT_MODEL } from "@/lib/ollama";
 import { build_inline_context } from "@/utils/build_inline_context";
 import type ReactPlugin from "@/main";
 
-export type InlineCommandId = "generate" | "ask";
+export type InlineCommandId = "generate" | "chat";
 
 export interface IPendingCommand {
   commandId: InlineCommandId;
@@ -228,20 +228,6 @@ export function createInlinePromptExtension(
               generatingRef.current = null;
               view.dispatch({});
             }
-          })();
-        } else {
-          view.dispatch({
-            changes: { from: fromOffset, to: toOffset, insert: "" },
-          });
-
-          (async () => {
-            const leaf = await plugin.activateView();
-            if (!leaf) return;
-            await leaf.setViewState({
-              type: leaf.view.getViewType(),
-              active: true,
-              state: { initialInput: prompt },
-            });
           })();
         }
 
