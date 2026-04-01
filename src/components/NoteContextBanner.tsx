@@ -28,7 +28,9 @@ export const NoteContextBanner = memo(function NoteContextBanner({
         className="chat:bg-[#A7F3D0] chat:text-[#065F46] hover:chat:bg-[#6EE7B7] chat:border-0 chat:shadow-none chat:font-normal chat:h-auto chat:py-1 chat:px-2"
       >
         <FileText className="chat:size-3.5 chat:shrink-0" />
-        <span className="chat:text-xs">In reference to: <strong>{displayName}</strong></span>
+        <span className="chat:text-xs">
+          In reference to: <strong>{displayName}</strong>
+        </span>
       </Button>
     </div>
   );

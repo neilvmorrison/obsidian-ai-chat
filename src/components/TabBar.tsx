@@ -1,22 +1,23 @@
+import { memo } from "react";
 import { SaveChatButton } from "@/components/SaveChatButton";
 import type { ChatMessage } from "@/hooks/useStreamChat";
 
-interface Tab {
+interface ITabBarTab {
   id: string;
   title: string | null;
   messages: ChatMessage[];
   model: string;
 }
 
-interface TabBarProps {
-  tabs: Tab[];
+interface ITabBarProps {
+  tabs: ITabBarTab[];
   activeTabId: string;
   onSwitch: (id: string) => void;
   onAdd: () => void;
   onClose: (id: string) => void;
 }
 
-export function TabBar({ tabs, activeTabId, onSwitch, onAdd, onClose }: TabBarProps) {
+export const TabBar = memo(function TabBar({ tabs, activeTabId, onSwitch, onAdd, onClose }: ITabBarProps) {
   return (
     <div className="oac-tab-bar">
       <div className="oac-tab-bar__scroll">
@@ -35,21 +36,19 @@ export function TabBar({ tabs, activeTabId, onSwitch, onAdd, onClose }: TabBarPr
                   <SaveChatButton messages={tab.messages} model={tab.model} />
                 </span>
               )}
-              {tabs.length > 1 && (
-                <span
-                  className="oac-tab-bar__close"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClose(tab.id);
-                  }}
-                  aria-label="Close tab"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </span>
-              )}
+              <span
+                className="oac-tab-bar__close"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose(tab.id);
+                }}
+                aria-label="Close tab"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </span>
             </button>
           );
         })}
@@ -62,4 +61,4 @@ export function TabBar({ tabs, activeTabId, onSwitch, onAdd, onClose }: TabBarPr
       </button>
     </div>
   );
-}
+});

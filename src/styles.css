@@ -619,8 +619,14 @@
 }
 
 @keyframes oac-bounce {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-4px); }
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
 }
 
 /* ── Highlight.js theme override for dark mode ───────────── */

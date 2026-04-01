@@ -39,7 +39,7 @@ export const ThinkingBlock = memo(function ThinkingBlock({
         onClick={handleSummaryClick}
         className="oac-thinking-summary chat:flex chat:items-center chat:gap-2"
       >
-        <LightbulbIcon className="chat:size-4" />
+        <LightbulbIcon className="chat:size-4 chat:stroke-amber-500" />
         {summaryLabel}
       </summary>
       <div className="oac-thinking-body">

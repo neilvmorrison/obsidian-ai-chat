@@ -61,7 +61,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   const stopRef = useRef<() => void>(() => {});
   const messageListRef = useRef<HTMLDivElement>(null);
 
-  const activeTab = tabs.find((t) => t.id === activeTabId)!;
+  const activeTab = tabs.find((t) => t.id === activeTabId);
 
   const selection = useTextSelection(messageListRef);
 
@@ -107,14 +107,14 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   );
 
   const { handleSubmit, isLoading, stop, changeModel, availableModels } = useStreamChat({
-    messages: activeTab.messages,
+    messages: activeTab?.messages ?? [],
     setMessages,
-    input: activeTab.input,
+    input: activeTab?.input ?? "",
     setInput,
-    model: activeTab.model,
+    model: activeTab?.model ?? DEFAULT_MODEL,
     setModel,
     setTokenUsage,
-    pendingImage: activeTab.pendingImage,
+    pendingImage: activeTab?.pendingImage ?? null,
     setPendingImage,
   });
 
@@ -137,17 +137,19 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
 
   const closeTab = useCallback(
     (id: string) => {
+      if (id === activeTabId) stopRef.current();
       setTabs((prev) => {
-        if (prev.length <= 1) return prev;
-        const idx = prev.findIndex((t) => t.id === id);
         const next = prev.filter((t) => t.id !== id);
         if (id === activeTabId) {
-          const newActive = next[Math.min(idx, next.length - 1)];
-          setActiveTabId(newActive.id);
+          if (next.length > 0) {
+            const idx = prev.findIndex((t) => t.id === id);
+            setActiveTabId(next[Math.min(idx, next.length - 1)].id);
+          } else {
+            setActiveTabId("");
+          }
         }
         return next;
       });
-      if (id === activeTabId) stopRef.current();
     },
     [activeTabId]
   );
@@ -156,14 +158,14 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   useEffect(() => {
     if (!initialInput || initialInput === prevInitialInput.current) return;
     prevInitialInput.current = initialInput;
-    if (activeTab.messages.length > 0) {
+    if (!activeTab || activeTab.messages.length > 0) {
       const tab = { ...createTab(), input: initialInput };
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     } else {
       setInput(initialInput);
     }
-  }, [initialInput, activeTab.messages.length, setInput]);
+  }, [initialInput, activeTab?.messages.length, setInput]);
 
   const prevNoteContextKey = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -189,6 +191,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
 
   const prevIsLoading = useRef(isLoading);
   useEffect(() => {
+    if (!activeTab) return;
     if (prevIsLoading.current && !isLoading && activeTab.title === null) {
       const hasAssistant = activeTab.messages.some((m) => m.role === "assistant" && m.content);
       if (hasAssistant) {
@@ -202,12 +205,12 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   }, [isLoading, activeTab, activeTabId]);
 
   useEffect(() => {
-    if (!activeTab.autoSubmit || isLoading) return;
+    if (!activeTab?.autoSubmit || isLoading) return;
     setTabs((prev) =>
       prev.map((t) => (t.id === activeTabId ? { ...t, autoSubmit: false } : t))
     );
     handleSubmit();
-  }, [activeTab.autoSubmit, activeTabId, isLoading, handleSubmit]);
+  }, [activeTab?.autoSubmit, activeTabId, isLoading, handleSubmit]);
 
   const handleAskAI = useCallback(() => {
     if (!selection) return;
@@ -216,7 +219,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   }, [selection]);
 
   const handleNewChat = useCallback(async () => {
-    if (!selection) return;
+    if (!selection || !activeTab) return;
     const { text } = selection;
     window.getSelection()?.removeAllRanges();
     const summary = await generate_context_summary(activeTab.messages, activeTab.model, text);
@@ -232,16 +235,16 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
     };
     setTabs((prev) => [...prev, tab]);
     setActiveTabId(tab.id);
-  }, [selection, activeTab.messages, activeTab.model]);
+  }, [selection, activeTab]);
 
   const handleContinueInNewChat = useCallback(
     (messages: ChatMessage[]) => {
       setAskAISelectedText(null);
-      const tab = createTab(messages, activeTab.model);
+      const tab = createTab(messages, activeTab?.model ?? DEFAULT_MODEL);
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     },
-    [activeTab.model]
+    [activeTab?.model]
   );
 
   const handleCloseModal = useCallback(() => {
@@ -250,56 +253,75 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
 
   return (
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground chat:relative">
-      <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} onClose={closeTab} />
-
-      {activeTab.noteContext && (
-        <NoteContextBanner
-          filename={activeTab.noteContext.filename}
-          filePath={activeTab.noteContext.filePath}
-        />
+      {tabs.length >= 1 && (
+        <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} onClose={closeTab} />
       )}
-      {activeTab.messages.filter((m) => m.role !== "system").length === 0 ? (
+
+      {tabs.length === 0 ? (
         <EmptyState>
-          <div className="chat:flex chat:flex-col chat:gap-2 chat:items-center chat:justify-center">
+          <div className="chat:flex chat:flex-col chat:gap-4 chat:items-center chat:justify-center">
             <BotIcon />
             <h1>Let's Chat!</h1>
+            <button
+              className="chat:px-4 chat:py-2 chat:rounded-md chat:text-sm chat:font-medium chat:bg-[--interactive-accent] chat:text-[--text-on-accent] chat:cursor-pointer chat:border-0 chat:hover:opacity-90"
+              onClick={addTab}
+            >
+              New Chat
+            </button>
           </div>
         </EmptyState>
       ) : (
-        <MessageList ref={messageListRef} messages={activeTab.messages} isLoading={isLoading} />
-      )}
-      {activeTab.messages.filter((m) => m.role !== "system").length > 0 && (
-        <TokenUsageBar tokenUsage={activeTab.tokenUsage} tokenLimit={tokenLimit} />
-      )}
-      <PromptInput
-        value={activeTab.input}
-        onChange={setInput}
-        onSubmit={handleSubmit}
-        onStop={stop}
-        isLoading={isLoading}
-        model={activeTab.model}
-        onModelChange={changeModel}
-        availableModels={availableModels}
-        selectedImage={activeTab.pendingImage}
-        onImageSelect={setPendingImage}
-      />
+        <>
+          {activeTab?.noteContext && (
+            <NoteContextBanner
+              filename={activeTab.noteContext.filename}
+              filePath={activeTab.noteContext.filePath}
+            />
+          )}
+          {(activeTab?.messages.filter((m) => m.role !== "system").length ?? 0) === 0 ? (
+            <EmptyState>
+              <div className="chat:flex chat:flex-col chat:gap-2 chat:items-center chat:justify-center">
+                <BotIcon />
+                <h1>Let's Chat!</h1>
+              </div>
+            </EmptyState>
+          ) : (
+            <MessageList ref={messageListRef} messages={activeTab!.messages} isLoading={isLoading} />
+          )}
+          {(activeTab?.messages.filter((m) => m.role !== "system").length ?? 0) > 0 && (
+            <TokenUsageBar tokenUsage={activeTab!.tokenUsage} tokenLimit={tokenLimit} />
+          )}
+          <PromptInput
+            value={activeTab?.input ?? ""}
+            onChange={setInput}
+            onSubmit={handleSubmit}
+            onStop={stop}
+            isLoading={isLoading}
+            model={activeTab?.model ?? DEFAULT_MODEL}
+            onModelChange={changeModel}
+            availableModels={availableModels}
+            selectedImage={activeTab?.pendingImage ?? null}
+            onImageSelect={setPendingImage}
+          />
 
-      {selection && !askAISelectedText && (
-        <SelectionToolbar
-          rect={selection.rect}
-          onAskAI={handleAskAI}
-          onNewChat={handleNewChat}
-        />
-      )}
+          {selection && !askAISelectedText && (
+            <SelectionToolbar
+              rect={selection.rect}
+              onAskAI={handleAskAI}
+              onNewChat={handleNewChat}
+            />
+          )}
 
-      {askAISelectedText && (
-        <AskAIModal
-          selectedText={askAISelectedText}
-          contextMessages={activeTab.messages}
-          model={activeTab.model}
-          onClose={handleCloseModal}
-          onContinueInNewChat={handleContinueInNewChat}
-        />
+          {askAISelectedText && (
+            <AskAIModal
+              selectedText={askAISelectedText}
+              contextMessages={activeTab?.messages ?? []}
+              model={activeTab?.model ?? DEFAULT_MODEL}
+              onClose={handleCloseModal}
+              onContinueInNewChat={handleContinueInNewChat}
+            />
+          )}
+        </>
       )}
     </div>
   );
