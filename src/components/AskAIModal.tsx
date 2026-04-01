@@ -1,5 +1,5 @@
 import { memo, useEffect, useCallback, useMemo } from "react";
-import { X, ExternalLink, AlertCircle } from "lucide-react";
+import { XIcon, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownMessage } from "@/components/MarkdownMessage";
 import { useModalStream } from "@/hooks/useModalStream";
@@ -31,7 +31,7 @@ export const AskAIModal = memo(function AskAIModal({
       contextMessages
         .filter((m) => m.role !== "system")
         .slice(-MAX_CONTEXT_MESSAGES),
-    [contextMessages]
+    [contextMessages],
   );
 
   const userMessage = useMemo<ChatMessage>(
@@ -40,13 +40,13 @@ export const AskAIModal = memo(function AskAIModal({
       role: "user",
       content: `Please explain or expand on the following excerpt from our conversation:\n\n"${selectedText}"`,
     }),
-    [selectedText]
+    [selectedText],
   );
 
   useEffect(() => {
     start([...contextSlice, userMessage], model, SYSTEM_PROMPT);
     return () => stop();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export const AskAIModal = memo(function AskAIModal({
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) onClose();
     },
-    [onClose]
+    [onClose],
   );
 
   return (
@@ -78,14 +78,20 @@ export const AskAIModal = memo(function AskAIModal({
       <div className="oac-ask-modal">
         <div className="oac-ask-modal__header">
           <span className="oac-ask-modal__title">Ask AI</span>
-          <button className="oac-ask-modal__close" onClick={onClose} aria-label="Close">
-            <X size={16} />
-          </button>
+          <Button
+            className="oac-ask-modal__close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <XIcon className="chat:size-4" />
+          </Button>
         </div>
 
         <div className="oac-ask-modal__selected-text">
           <span className="oac-ask-modal__selected-label">About:</span>
-          <blockquote className="oac-ask-modal__blockquote">{selectedText}</blockquote>
+          <blockquote className="oac-ask-modal__blockquote">
+            {selectedText}
+          </blockquote>
         </div>
 
         <div className="oac-ask-modal__body">
