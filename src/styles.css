@@ -571,29 +571,6 @@
   overflow-x: auto;
 }
 
-/* ── System messages (model change indicator) ────────────── */
-.oac-system-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--oac-space-4);
-  padding: var(--oac-space-2) 0;
-}
-
-.oac-system-message::before,
-.oac-system-message::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--background-modifier-border);
-}
-
-.oac-system-message__text {
-  font-size: var(--oac-font-sm);
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
 /* ── Typing indicator ────────────────────────────────────── */
 .oac-typing-indicator {
   display: flex;

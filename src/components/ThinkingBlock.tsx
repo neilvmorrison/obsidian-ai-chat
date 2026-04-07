@@ -7,12 +7,14 @@ interface IThinkingBlockProps {
   content: string;
   isStreaming: boolean;
   thinkingDuration?: number;
+  staticSummaryLabel?: string;
 }
 
 export const ThinkingBlock = memo(function ThinkingBlock({
   content,
   isStreaming,
   thinkingDuration,
+  staticSummaryLabel,
 }: IThinkingBlockProps) {
   const [isOpen, setIsOpen] = useState(isStreaming);
 
@@ -27,11 +29,12 @@ export const ThinkingBlock = memo(function ThinkingBlock({
 
   const summaryLabel = useMemo(() => {
     if (isStreaming) return "Thinking\u2026";
+    if (staticSummaryLabel !== undefined) return staticSummaryLabel;
     if (thinkingDuration !== undefined) {
       return `Thought for ${format_thinking_duration(thinkingDuration)}`;
     }
     return "Thought";
-  }, [isStreaming, thinkingDuration]);
+  }, [isStreaming, thinkingDuration, staticSummaryLabel]);
 
   return (
     <details className="oac-thinking-block" open={isOpen}>
