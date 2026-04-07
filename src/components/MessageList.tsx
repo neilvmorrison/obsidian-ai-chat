@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, memo } from "react";
 import type { ChatMessage } from "@/hooks/useStreamChat";
 import { AssistantMessage } from "./AssistantMessage";
+import { ThinkingBlock } from "./ThinkingBlock";
 import { format_timestamp } from "@/utils/format_timestamp";
 
 interface IMessageListProps {
@@ -42,8 +43,15 @@ export const MessageList = memo(
       <div ref={listRef} className="oac-message-list">
         {messages.map((msg) =>
           msg.role === "system" ? (
-            <div key={msg.id} className="oac-system-message">
-              <span className="oac-system-message__text">{msg.content}</span>
+            <div
+              key={msg.id}
+              className="oac-message oac-message--assistant"
+            >
+              <ThinkingBlock
+                content={msg.content}
+                isStreaming={false}
+                staticSummaryLabel="System Prompt"
+              />
             </div>
           ) : (
             <div

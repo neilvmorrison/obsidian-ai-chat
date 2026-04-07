@@ -1,5 +1,5 @@
 import { MarkdownView, Plugin, PluginSettingTab, App, Setting, TFile, WorkspaceLeaf } from "obsidian";
-import { ReactView, VIEW_TYPE } from "./view";
+import { ReactView, VIEW_TYPE, type INoteContext } from "./view";
 import { parseChatNote } from "./utils/parseChatNote";
 import { InlineCommandSuggest } from "./editor/InlineCommandSuggest";
 import { createInlinePromptExtension, type IPendingCommand } from "./editor/inlinePromptExtension";
@@ -48,7 +48,7 @@ export default class ReactPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new ReactView(leaf, this));
 
     const pendingRef: { current: IPendingCommand | null } = { current: null };
-    this.registerEditorSuggest(new InlineCommandSuggest(this.app, pendingRef));
+    this.registerEditorSuggest(new InlineCommandSuggest(this.app, pendingRef, this));
     this.registerEditorExtension(createInlinePromptExtension(pendingRef, this));
     this.addRibbonIcon("bot-message-square", "Open Chat", () => {
       this.activateView();
@@ -160,6 +160,28 @@ export default class ReactPlugin extends Plugin {
     if (leaves.length > 0) {
       (leaves[0].view as ReactView).renderApp();
     }
+  }
+
+  async openChatWithNoteContext(
+    noteContent: string,
+    cursorOffset: number,
+    filename: string,
+    filePath: string,
+  ): Promise<void> {
+    const leaf = await this.activateView();
+    if (!leaf) return;
+    const noteContext: INoteContext = {
+      key: crypto.randomUUID(),
+      noteContent,
+      cursorOffset,
+      filename,
+      filePath,
+    };
+    await leaf.setViewState({
+      type: VIEW_TYPE,
+      active: true,
+      state: { noteContext },
+    });
   }
 
   async openChatFromFile(file: TFile): Promise<void> {

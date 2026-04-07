@@ -8,10 +8,19 @@ import type ReactPlugin from "./main";
 
 export const VIEW_TYPE = "react-view";
 
+export interface INoteContext {
+  key: string;
+  noteContent: string;
+  cursorOffset: number;
+  filename: string;
+  filePath: string;
+}
+
 interface ChatViewState {
   initialMessages?: ChatMessage[];
   initialModel?: string;
   initialInput?: string;
+  noteContext?: INoteContext;
 }
 
 export class ReactView extends ItemView {
@@ -48,6 +57,7 @@ export class ReactView extends ItemView {
       initialMessages: this.chatState.initialMessages,
       initialModel: this.chatState.initialModel,
       initialInput: this.chatState.initialInput,
+      noteContext: this.chatState.noteContext,
       tokenLimit: this.plugin.settings.tokenLimit,
     };
     this.root!.render(

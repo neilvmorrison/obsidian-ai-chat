@@ -9,7 +9,7 @@ src/
 ├── components/               # React UI components
 │   ├── ui/                   # Radix-based primitive wrappers (button, select, tooltip, etc.)
 │   ├── App.tsx               # Root component; owns all tab state (tabs[], activeTabId)
-│   ├── MessageList.tsx       # Scrollable, auto-scrolling message list
+│   ├── MessageList.tsx       # Scrollable message list; system rows use ThinkingBlock ("System Prompt")
 │   ├── MarkdownMessage.tsx   # AI response renderer (GFM, math/KaTeX, mermaid, syntax highlight)
 │   ├── PromptInput.tsx       # Text input, model selector, send/stop button
 │   ├── TabBar.tsx            # Multi-tab navigation bar
@@ -68,7 +68,7 @@ Parses a raw assistant message string into `IContentSegment[]` — either `{ typ
 Wrapper rendered for all assistant messages. Calls `parse_thinking_content` via `useMemo` and maps each segment to either `<ThinkingBlock>` (for `type: "thinking"`) or `<MarkdownMessage>` (for `type: "text"`). Wrapped in `memo`.
 
 ### `src/components/ThinkingBlock.tsx`
-Collapsible `<details>` element for `<think>` content. Manages `isOpen` state that auto-opens when `isStreaming` is `true` and auto-closes when streaming ends; user can toggle freely at any time. Renders thinking content via `<MarkdownMessage>`.
+Collapsible `<details>` for think-tag segments and for `role: "system"` rows in `MessageList`. Optional `staticSummaryLabel` (e.g. `"System Prompt"`) sets the summary when not streaming. `isOpen` auto-follows `isStreaming`; user can toggle anytime. Body is `<MarkdownMessage>` in `.oac-thinking-body`. System rows use `oac-message oac-message--assistant` so markdown matches assistant/thinking styling.
 
 ### `src/components/TokenUsageBar.tsx`
 Displays a progress bar showing token usage relative to the configured limit. Color thresholds: green below 50%, orange 50–75%, red above 75%. Renders token counts as formatted strings (e.g. `6.4k/8k`). Only shown when the active tab has messages.
