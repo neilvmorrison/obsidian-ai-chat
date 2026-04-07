@@ -8,7 +8,11 @@ import { TabBar } from "@/components/TabBar";
 import { TokenUsageBar } from "@/components/TokenUsageBar";
 import { SelectionToolbar } from "@/components/SelectionToolbar";
 import { AskAIModal } from "@/components/AskAIModal";
-import { useStreamChat, DEFAULT_MODEL, type ChatMessage } from "@/hooks/useStreamChat";
+import {
+  useStreamChat,
+  DEFAULT_MODEL,
+  type ChatMessage,
+} from "@/hooks/useStreamChat";
 import { useTextSelection } from "@/hooks/useTextSelection";
 import { generateTitle } from "@/utils/generateTitle";
 import { generate_context_summary } from "@/utils/generate_context_summary";
@@ -32,7 +36,10 @@ interface ITab {
   noteContext?: ITabNoteContext;
 }
 
-function createTab(messages: ChatMessage[] = [], model: string = DEFAULT_MODEL): ITab {
+function createTab(
+  messages: ChatMessage[] = [],
+  model: string = DEFAULT_MODEL,
+): ITab {
   return {
     id: crypto.randomUUID(),
     title: null,
@@ -52,12 +59,20 @@ export interface IAppProps {
   tokenLimit?: number;
 }
 
-export function App({ initialMessages, initialModel, initialInput, noteContext, tokenLimit = 8192 }: IAppProps) {
+export function App({
+  initialMessages,
+  initialModel,
+  initialInput,
+  noteContext,
+  tokenLimit = 8192,
+}: IAppProps) {
   const [tabs, setTabs] = useState<ITab[]>(() => [
     createTab(initialMessages ?? [], initialModel ?? DEFAULT_MODEL),
   ]);
   const [activeTabId, setActiveTabId] = useState(() => tabs[0].id);
-  const [askAISelectedText, setAskAISelectedText] = useState<string | null>(null);
+  const [askAISelectedText, setAskAISelectedText] = useState<string | null>(
+    null,
+  );
   const stopRef = useRef<() => void>(() => {});
   const messageListRef = useRef<HTMLDivElement>(null);
 
@@ -70,53 +85,70 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
       setTabs((prev) =>
         prev.map((t) =>
           t.id === activeTabId
-            ? { ...t, messages: typeof updater === "function" ? updater(t.messages) : updater }
-            : t
-        )
+            ? {
+                ...t,
+                messages:
+                  typeof updater === "function" ? updater(t.messages) : updater,
+              }
+            : t,
+        ),
       );
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const setInput = useCallback(
     (value: string) => {
-      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, input: value } : t)));
+      setTabs((prev) =>
+        prev.map((t) => (t.id === activeTabId ? { ...t, input: value } : t)),
+      );
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const setModel = useCallback(
     (value: string) => {
-      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, model: value } : t)));
+      setTabs((prev) =>
+        prev.map((t) => (t.id === activeTabId ? { ...t, model: value } : t)),
+      );
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const setTokenUsage = useCallback(
     (value: number) => {
-      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, tokenUsage: value } : t)));
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeTabId ? { ...t, tokenUsage: value } : t,
+        ),
+      );
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const setPendingImage = useCallback(
     (value: string | null) => {
-      setTabs((prev) => prev.map((t) => (t.id === activeTabId ? { ...t, pendingImage: value } : t)));
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeTabId ? { ...t, pendingImage: value } : t,
+        ),
+      );
     },
-    [activeTabId]
+    [activeTabId],
   );
 
-  const { handleSubmit, isLoading, stop, changeModel, availableModels } = useStreamChat({
-    messages: activeTab?.messages ?? [],
-    setMessages,
-    input: activeTab?.input ?? "",
-    setInput,
-    model: activeTab?.model ?? DEFAULT_MODEL,
-    setModel,
-    setTokenUsage,
-    pendingImage: activeTab?.pendingImage ?? null,
-    setPendingImage,
-  });
+  const { handleSubmit, isLoading, stop, changeModel, availableModels } =
+    useStreamChat({
+      messages: activeTab?.messages ?? [],
+      setMessages,
+      input: activeTab?.input ?? "",
+      setInput,
+      model: activeTab?.model ?? DEFAULT_MODEL,
+      setModel,
+      setTokenUsage,
+      pendingImage: activeTab?.pendingImage ?? null,
+      setPendingImage,
+    });
 
   stopRef.current = stop;
 
@@ -132,7 +164,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
       stopRef.current();
       setActiveTabId(id);
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const closeTab = useCallback(
@@ -151,7 +183,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
         return next;
       });
     },
-    [activeTabId]
+    [activeTabId],
   );
 
   const prevInitialInput = useRef<string | undefined>(undefined);
@@ -183,7 +215,10 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
     };
     const tab: ITab = {
       ...createTab([systemMsg], DEFAULT_MODEL),
-      noteContext: { filename: noteContext.filename, filePath: noteContext.filePath },
+      noteContext: {
+        filename: noteContext.filename,
+        filePath: noteContext.filePath,
+      },
     };
     setTabs((prev) => [...prev, tab]);
     setActiveTabId(tab.id);
@@ -193,11 +228,15 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   useEffect(() => {
     if (!activeTab) return;
     if (prevIsLoading.current && !isLoading && activeTab.title === null) {
-      const hasAssistant = activeTab.messages.some((m) => m.role === "assistant" && m.content);
+      const hasAssistant = activeTab.messages.some(
+        (m) => m.role === "assistant" && m.content,
+      );
       if (hasAssistant) {
         const tabId = activeTabId;
         generateTitle(activeTab.messages).then((title) => {
-          setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, title } : t)));
+          setTabs((prev) =>
+            prev.map((t) => (t.id === tabId ? { ...t, title } : t)),
+          );
         });
       }
     }
@@ -207,7 +246,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   useEffect(() => {
     if (!activeTab?.autoSubmit || isLoading) return;
     setTabs((prev) =>
-      prev.map((t) => (t.id === activeTabId ? { ...t, autoSubmit: false } : t))
+      prev.map((t) => (t.id === activeTabId ? { ...t, autoSubmit: false } : t)),
     );
     handleSubmit();
   }, [activeTab?.autoSubmit, activeTabId, isLoading, handleSubmit]);
@@ -222,7 +261,11 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
     if (!selection || !activeTab) return;
     const { text } = selection;
     window.getSelection()?.removeAllRanges();
-    const summary = await generate_context_summary(activeTab.messages, activeTab.model, text);
+    const summary = await generate_context_summary(
+      activeTab.messages,
+      activeTab.model,
+      text,
+    );
     const systemMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "system",
@@ -244,7 +287,7 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
       setTabs((prev) => [...prev, tab]);
       setActiveTabId(tab.id);
     },
-    [activeTab?.model]
+    [activeTab?.model],
   );
 
   const handleCloseModal = useCallback(() => {
@@ -254,7 +297,13 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
   return (
     <div className="chat:flex chat:h-full chat:flex-col chat:bg-background chat:text-foreground chat:relative">
       {tabs.length >= 1 && (
-        <TabBar tabs={tabs} activeTabId={activeTabId} onSwitch={switchTab} onAdd={addTab} onClose={closeTab} />
+        <TabBar
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onSwitch={switchTab}
+          onAdd={addTab}
+          onClose={closeTab}
+        />
       )}
 
       {tabs.length === 0 ? (
@@ -278,7 +327,8 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
               filePath={activeTab.noteContext.filePath}
             />
           )}
-          {(activeTab?.messages.filter((m) => m.role !== "system").length ?? 0) === 0 ? (
+          {(activeTab?.messages.filter((m) => m.role !== "system").length ??
+            0) === 0 ? (
             <EmptyState>
               <div className="chat:flex chat:flex-col chat:gap-2 chat:items-center chat:justify-center">
                 <BotIcon />
@@ -286,10 +336,18 @@ export function App({ initialMessages, initialModel, initialInput, noteContext, 
               </div>
             </EmptyState>
           ) : (
-            <MessageList ref={messageListRef} messages={activeTab!.messages} isLoading={isLoading} />
+            <MessageList
+              ref={messageListRef}
+              messages={activeTab!.messages}
+              isLoading={isLoading}
+            />
           )}
-          {(activeTab?.messages.filter((m) => m.role !== "system").length ?? 0) > 0 && (
-            <TokenUsageBar tokenUsage={activeTab!.tokenUsage} tokenLimit={tokenLimit} />
+          {(activeTab?.messages.filter((m) => m.role !== "system").length ??
+            0) > 0 && (
+            <TokenUsageBar
+              tokenUsage={activeTab!.tokenUsage}
+              tokenLimit={tokenLimit}
+            />
           )}
           <PromptInput
             value={activeTab?.input ?? ""}
